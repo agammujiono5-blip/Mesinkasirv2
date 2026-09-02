@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800&display=swap');
+@import 'tailwindcss';
+
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-3: #e2e8f0;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
+  --primary: #334155;
+  --primary-fg: #ffffff;
+  --primary-light: #f1f5f9;
+  --primary-border: #cbd5e1;
+  --success: #10b981;
+  --success-light: #ecfdf5;
+  --success-text: #047857;
+  --warning: #f59e0b;
+  --warning-light: #fffbeb;
+  --warning-text: #92400e;
+  --danger: #ef4444;
+  --danger-light: #fef2f2;
+  --danger-text: #b91c1c;
+  --sidebar: #ffffff;
+  --sidebar-active: #1e293b;
+  --sidebar-active-text: #ffffff;
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.05), 0 2px 6px rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --radius: 18px;
+  --radius-sm: 12px;
+  --radius-xs: 8px;
+}
+
+:root.dark {
+  --bg: #0b0f17;
+  --surface: #131b28;
+  --surface-2: #1e293b;
+  --surface-3: #334155;
+  --border: #1e293b;
+  --border-strong: #334155;
+  --text: #f8fafc;
+  --text-2: #94a3b8;
+  --text-3: #64748b;
+  --primary: #e2e8f0;
+  --primary-fg: #0f172a;
+  --primary-light: #1e293b;
+  --primary-border: #334155;
+  --success: #34d399;
+  --success-light: #022c22;
+  --success-text: #6ee7b7;
+  --warning: #fbbf24;
+  --warning-light: #1c1008;
+  --warning-text: #fde68a;
+  --danger: #f87171;
+  --danger-light: #1c0a0a;
+  --danger-text: #fca5a5;
+  --sidebar: #131b28;
+  --sidebar-active: #f1f5f9;
+  --sidebar-active-text: #0f172a;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-3) transparent;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 99px; }
+
+button { cursor: pointer; }
+input, select, textarea { font-family: inherit; }

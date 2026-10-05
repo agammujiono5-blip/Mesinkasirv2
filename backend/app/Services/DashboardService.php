@@ -13,9 +13,6 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {
-    /**
-     * Get summary metrics for the management dashboard.
-     */
     public function getSummaryStats(): array
     {
         $today = Carbon::today();
@@ -64,12 +61,7 @@ class DashboardService
             'barang_stok_menipis_count' => $barangStokMenipisCount,
             'barang_terlaris' => $barangTerlaris,
         ];
-    }
-
-    /**
-     * Get sales chart data for the last N days.
-     */
-    public function getSalesChart(int $days = 7): array
+    }    public function getSalesChart(int $days = 7): array
     {
         $startDate = Carbon::today()->subDays($days - 1);
 

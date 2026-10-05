@@ -15,6 +15,9 @@ import {
   TrashIcon,
   CloseIcon,
   SearchIcon,
+  ImageIcon,
+  CameraIcon,
+  PackageIcon,
 } from "../../components/Icons";
 
 const rupiah = (n: number) => "Rp " + Math.floor(n).toLocaleString("id-ID");
@@ -30,6 +33,11 @@ export default function AdminBarang() {
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<BarangItem | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
+  const [previewModalImg, setPreviewModalImg] = useState<{ url: string; title: string } | null>(null);
 
   const [formData, setFormData] = useState({
     kode_barang: "",
@@ -73,6 +81,9 @@ export default function AdminBarang() {
 
   const openCreateModal = () => {
     setEditItem(null);
+    setImageFile(null);
+    setImagePreview(null);
+    setRemoveImage(false);
     setFormData({
       kode_barang: "BRG-" + Math.floor(1000 + Math.random() * 9000),
       nama_barang: "",
@@ -90,6 +101,9 @@ export default function AdminBarang() {
 
   const openEditModal = (item: BarangItem) => {
     setEditItem(item);
+    setImageFile(null);
+    setImagePreview(item.gambar || null);
+    setRemoveImage(false);
     setFormData({
       kode_barang: item.kode_barang,
       nama_barang: item.nama_barang,
@@ -103,6 +117,24 @@ export default function AdminBarang() {
       deskripsi: item.deskripsi || "",
     });
     setShowModal(true);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Ukuran file foto maksimal 2MB!");
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setRemoveImage(false);
+  };
+
+  const handleRemovePhoto = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setRemoveImage(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -120,6 +152,12 @@ export default function AdminBarang() {
       data.append("stok_minimum", String(formData.stok_minimum));
       data.append("satuan", formData.satuan);
       data.append("deskripsi", formData.deskripsi);
+
+      if (imageFile) {
+        data.append("gambar", imageFile);
+      } else if (removeImage) {
+        data.append("hapus_gambar", "1");
+      }
 
       if (editItem) {
         await barangApi.update(editItem.id_barang, data);
@@ -184,6 +222,7 @@ export default function AdminBarang() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <th className="p-4 w-16 text-center">Foto</th>
               <th className="p-4">Kode</th>
               <th className="p-4">Nama Barang</th>
               <th className="p-4">Kategori</th>
@@ -196,19 +235,39 @@ export default function AdminBarang() {
           <tbody className="text-xs divide-y divide-slate-100 dark:divide-slate-800">
             {loading ? (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-slate-400">
+                <td colSpan={8} className="p-8 text-center text-slate-400">
                   Memuat katalog produk...
                 </td>
               </tr>
             ) : barangList.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-slate-400">
+                <td colSpan={8} className="p-8 text-center text-slate-400">
                   Tidak ada barang di database.
                 </td>
               </tr>
             ) : (
               barangList.map((b) => (
                 <tr key={b.id_barang} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-all">
+                  <td className="p-4 text-center">
+                    {b.gambar ? (
+                      <button
+                        type="button"
+                        onClick={() => setPreviewModalImg({ url: b.gambar!, title: b.nama_barang })}
+                        className="w-11 h-11 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 cursor-pointer group/img relative mx-auto focus:outline-none transition-transform hover:scale-105 active:scale-95 shadow-sm block"
+                        title="Klik untuk melihat foto"
+                      >
+                        <img
+                          src={b.gambar}
+                          alt={b.nama_barang}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-110"
+                        />
+                      </button>
+                    ) : (
+                      <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-slate-800/80 text-slate-400 border border-dashed border-slate-200 dark:border-slate-700 mx-auto">
+                        <PackageIcon size={18} />
+                      </div>
+                    )}
+                  </td>
                   <td className="p-4 font-mono font-semibold text-slate-400">{b.kode_barang}</td>
                   <td className="p-4 font-bold text-slate-800 dark:text-slate-100">{b.nama_barang}</td>
                   <td className="p-4 text-slate-500">{b.kategori?.nama_kategori || "-"}</td>
@@ -379,6 +438,63 @@ export default function AdminBarang() {
                 </div>
               </div>
 
+              {/* Upload Foto Barang */}
+              <div>
+                <label className="font-bold text-slate-500 block mb-1">Foto Barang</label>
+                {imagePreview ? (
+                  <div className="flex items-center gap-3.5 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                    <img
+                      src={imagePreview}
+                      alt="Pratinjau Foto"
+                      className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shadow-sm shrink-0"
+                    />
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
+                        {imageFile ? imageFile.name : "Foto tersimpan"}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <label className="px-3 py-1.5 text-[11px] font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-all inline-flex items-center gap-1 shadow-2xs">
+                          <CameraIcon size={12} />
+                          <span>Ganti Foto</span>
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={handleFileChange}
+                            className="hidden"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleRemovePhoto}
+                          className="px-3 py-1.5 text-[11px] font-bold rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 border border-red-200 dark:border-red-900/60 transition-all inline-flex items-center gap-1"
+                        >
+                          <TrashIcon size={12} />
+                          <span>Hapus</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-2xl p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-slate-50/50 dark:bg-slate-800/20 hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition-all text-center">
+                    <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
+                      <CameraIcon size={18} />
+                    </div>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                      Pilih Foto Produk
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      Format JPG, PNG, atau WEBP (Maksimal 2MB)
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+
               <div>
                 <label className="font-bold text-slate-500 block mb-1">Deskripsi Produk</label>
                 <textarea
@@ -406,6 +522,41 @@ export default function AdminBarang() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Modal for Photo Preview */}
+      {previewModalImg && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm"
+          onClick={() => setPreviewModalImg(null)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 rounded-3xl p-5 max-w-sm sm:max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ImageIcon size={16} className="text-slate-400" />
+                <h4 className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate max-w-[260px]">
+                  {previewModalImg.title}
+                </h4>
+              </div>
+              <button
+                onClick={() => setPreviewModalImg(null)}
+                className="w-7 h-7 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <CloseIcon size={14} />
+              </button>
+            </div>
+            <div className="w-full h-64 sm:h-80 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center border border-slate-100 dark:border-slate-800">
+              <img
+                src={previewModalImg.url}
+                alt={previewModalImg.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
         </div>
       )}

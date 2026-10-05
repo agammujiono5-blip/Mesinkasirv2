@@ -391,14 +391,19 @@ export default function Kasir({ user, onLogout, isDark, toggleDark }: KasirProps
 
                       <div>
                         {p.gambar ? (
-                          <img
-                            src={p.gambar}
-                            alt={p.nama_barang}
-                            className="w-full h-24 object-cover rounded-xl mb-2.5"
-                          />
+                          <div className="w-full h-28 rounded-xl overflow-hidden mb-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 relative">
+                            <img
+                              src={p.gambar}
+                              alt={p.nama_barang}
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLElement).style.display = 'none';
+                              }}
+                            />
+                          </div>
                         ) : (
-                          <div className="w-full h-20 rounded-xl mb-2.5 flex items-center justify-center bg-slate-100 dark:bg-slate-800/80 text-slate-400">
-                            <PackageIcon size={24} />
+                          <div className="w-full h-28 rounded-xl mb-2.5 flex items-center justify-center bg-slate-100 dark:bg-slate-800/80 text-slate-400 border border-dashed border-slate-200 dark:border-slate-700">
+                            <PackageIcon size={26} />
                           </div>
                         )}
                         <p className="text-[10px] font-mono font-semibold text-slate-400">{p.kode_barang}</p>
@@ -471,18 +476,32 @@ export default function Kasir({ user, onLogout, isDark, toggleDark }: KasirProps
                   key={item.barang.id_barang}
                   className="p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 flex flex-col gap-2"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold truncate text-slate-800 dark:text-slate-100">
-                        {item.barang.nama_barang}
-                      </p>
-                      <p className="text-[11px] text-slate-400">
-                        {rupiah(Number(item.barang.harga_jual))} / {item.barang.satuan}
-                      </p>
+                  <div className="flex items-start justify-between gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {item.barang.gambar ? (
+                        <img
+                          src={item.barang.gambar}
+                          alt={item.barang.nama_barang}
+                          className="w-10 h-10 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-200 dark:bg-slate-700 text-slate-400 shrink-0">
+                          <PackageIcon size={16} />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold truncate text-slate-800 dark:text-slate-100">
+                          {item.barang.nama_barang}
+                        </p>
+                        <p className="text-[11px] text-slate-400">
+                          {rupiah(Number(item.barang.harga_jual))} / {item.barang.satuan}
+                        </p>
+                      </div>
                     </div>
                     <button
                       onClick={() => removeItem(item.barang.id_barang)}
-                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1"
+                      className="text-slate-400 hover:text-red-500 dark:hover:text-red-400 text-xs p-1 transition-colors shrink-0"
+                      title="Hapus dari keranjang"
                     >
                       <TrashIcon size={14} />
                     </button>

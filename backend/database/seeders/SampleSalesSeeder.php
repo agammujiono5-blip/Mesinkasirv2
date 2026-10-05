@@ -56,16 +56,16 @@ class SampleSalesSeeder extends Seeder
 
         // 4. Products list
         $productsData = [
-            ['kode' => 'BRG-001', 'nama' => 'Kopi Arabika Premium 250g', 'kat' => $katMakanan->id_kategori, 'sup' => $sup1->id_supplier, 'beli' => 35000, 'jual' => 50000, 'stok' => 85, 'min' => 10, 'satuan' => 'pack'],
-            ['kode' => 'BRG-002', 'nama' => 'Wireless Mouse Ergonomic', 'kat' => $katElektronik->id_kategori, 'sup' => $sup2->id_supplier, 'beli' => 75000, 'jual' => 120000, 'stok' => 42, 'min' => 5, 'satuan' => 'unit'],
-            ['kode' => 'BRG-003', 'nama' => 'Buku Catatan Hardcover A5', 'kat' => $katAlatTulis->id_kategori, 'sup' => $sup1->id_supplier, 'beli' => 15000, 'jual' => 25000, 'stok' => 150, 'min' => 20, 'satuan' => 'pcs'],
-            ['kode' => 'BRG-004', 'nama' => 'Mechanical Keyboard RGB TKL', 'kat' => $katElektronik->id_kategori, 'sup' => $sup2->id_supplier, 'beli' => 280000, 'jual' => 450000, 'stok' => 18, 'min' => 3, 'satuan' => 'unit'],
-            ['kode' => 'BRG-005', 'nama' => 'Matcha Latte Bubuk 500g', 'kat' => $katMakanan->id_kategori, 'sup' => $sup1->id_supplier, 'beli' => 45000, 'jual' => 68000, 'stok' => 60, 'min' => 8, 'satuan' => 'pack'],
-            ['kode' => 'BRG-006', 'nama' => 'Pulpen Gel Hitam 0.5mm (Pack 12)', 'kat' => $katAlatTulis->id_kategori, 'sup' => $sup1->id_supplier, 'beli' => 18000, 'jual' => 30000, 'stok' => 95, 'min' => 15, 'satuan' => 'pack'],
-            ['kode' => 'BRG-007', 'nama' => 'Kaos Polos Cotton Combed 30s', 'kat' => $katFashion->id_kategori, 'sup' => $sup2->id_supplier, 'beli' => 32000, 'jual' => 55000, 'stok' => 70, 'min' => 10, 'satuan' => 'pcs'],
-            ['kode' => 'BRG-008', 'nama' => 'Kabel Data Type-C Fast Charging', 'kat' => $katElektronik->id_kategori, 'sup' => $sup2->id_supplier, 'beli' => 15000, 'jual' => 35000, 'stok' => 120, 'min' => 10, 'satuan' => 'pcs'],
-            ['kode' => 'BRG-009', 'nama' => 'Tumbler Stainless Steel 500ml', 'kat' => $katKebutuhan->id_kategori, 'sup' => $sup1->id_supplier, 'beli' => 40000, 'jual' => 75000, 'stok' => 35, 'min' => 5, 'satuan' => 'pcs'],
-            ['kode' => 'BRG-010', 'nama' => 'Tas Ransel Laptop Waterproof', 'kat' => $katFashion->id_kategori, 'sup' => $sup2->id_supplier, 'beli' => 110000, 'jual' => 185000, 'stok' => 4, 'min' => 5, 'satuan' => 'unit'],
+            ['kode' => 'BRG-001', 'nama' => 'Kopi Arabika Premium 250g', 'kat' => $katMakanan->id_kategori, 'sup' => $sup1->id_supplier, 'beli' => 35000, 'jual' => 50000, 'stok' => 85, 'min' => 10, 'satuan' => 'pack', 'gambar' => '/storage/barang/kopi_arabika.jpg'],
+            ['kode' => 'BRG-002', 'nama' => 'Wireless Mouse Ergonomic', 'kat' => $katElektronik->id_kategori, 'sup' => $sup2->id_supplier, 'beli' => 75000, 'jual' => 120000, 'stok' => 42, 'min' => 5, 'satuan' => 'unit', 'gambar' => '/storage/barang/wireless_mouse.jpg'],
+            ['kode' => 'BRG-003', 'nama' => 'Buku Catatan Hardcover A5', 'kat' => $katAlatTulis->id_kategori, 'sup' => $sup1->id_supplier, 'beli' => 15000, 'jual' => 25000, 'stok' => 150, 'min' => 20, 'satuan' => 'pcs', 'gambar' => '/storage/barang/buku_catatan.jpg'],
+            ['kode' => 'BRG-004', 'nama' => 'Mechanical Keyboard RGB TKL', 'kat' => $katElektronik->id_kategori, 'sup' => $sup2->id_supplier, 'beli' => 280000, 'jual' => 450000, 'stok' => 18, 'min' => 3, 'satuan' => 'unit', 'gambar' => '/storage/barang/mechanical_keyboard.jpg'],
+            ['kode' => 'BRG-005', 'nama' => 'Matcha Latte Bubuk 500g', 'kat' => $katMakanan->id_kategori, 'sup' => $sup1->id_supplier, 'beli' => 45000, 'jual' => 68000, 'stok' => 60, 'min' => 8, 'satuan' => 'pack', 'gambar' => '/storage/barang/matcha_latte.jpg'],
+            ['kode' => 'BRG-006', 'nama' => 'Pulpen Gel Hitam 0.5mm (Pack 12)', 'kat' => $katAlatTulis->id_kategori, 'sup' => $sup1->id_supplier, 'beli' => 18000, 'jual' => 30000, 'stok' => 95, 'min' => 15, 'satuan' => 'pack', 'gambar' => '/storage/barang/pulpen_gel.jpg'],
+            ['kode' => 'BRG-007', 'nama' => 'Kaos Polos Cotton Combed 30s', 'kat' => $katFashion->id_kategori, 'sup' => $sup2->id_supplier, 'beli' => 32000, 'jual' => 55000, 'stok' => 70, 'min' => 10, 'satuan' => 'pcs', 'gambar' => '/storage/barang/kaos_polos.jpg'],
+            ['kode' => 'BRG-008', 'nama' => 'Kabel Data Type-C Fast Charging', 'kat' => $katElektronik->id_kategori, 'sup' => $sup2->id_supplier, 'beli' => 15000, 'jual' => 35000, 'stok' => 120, 'min' => 10, 'satuan' => 'pcs', 'gambar' => '/storage/barang/kabel_typec.jpg'],
+            ['kode' => 'BRG-009', 'nama' => 'Tumbler Stainless Steel 500ml', 'kat' => $katKebutuhan->id_kategori, 'sup' => $sup1->id_supplier, 'beli' => 40000, 'jual' => 75000, 'stok' => 35, 'min' => 5, 'satuan' => 'pcs', 'gambar' => '/storage/barang/tumbler.jpg'],
+            ['kode' => 'BRG-010', 'nama' => 'Tas Ransel Laptop Waterproof', 'kat' => $katFashion->id_kategori, 'sup' => $sup2->id_supplier, 'beli' => 110000, 'jual' => 185000, 'stok' => 4, 'min' => 5, 'satuan' => 'unit', 'gambar' => '/storage/barang/tas_ransel.jpg'],
         ];
 
         $barangs = [];
@@ -82,6 +82,7 @@ class SampleSalesSeeder extends Seeder
                     'stok' => $p['stok'],
                     'stok_minimum' => $p['min'],
                     'satuan' => $p['satuan'],
+                    'gambar' => $p['gambar'],
                 ]
             );
         }

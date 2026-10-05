@@ -76,6 +76,7 @@ class BarangController extends BaseApiController
             'stok_minimum' => 'sometimes|integer|min:0',
             'satuan' => 'sometimes|required|string|max:20',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'hapus_gambar' => 'nullable',
         ]);
 
         $gambar = $request->file('gambar');

@@ -15,6 +15,7 @@ import {
   AlertWarningIcon,
   CheckCircleIcon,
   DashboardIcon,
+  PackageIcon,
 } from "../../components/Icons";
 
 const rupiah = (n: number) => "Rp " + Math.floor(n).toLocaleString("id-ID");
@@ -211,22 +212,35 @@ export default function AdminDashboard() {
               </div>
             ) : (
               stats.barang_terlaris.map((item, idx) => (
-                <div key={item.id_barang} className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="font-semibold truncate max-w-[170px text-slate-700 dark:text-slate-200">
-                      {idx + 1}. {item.barang?.nama_barang || `Barang #${item.id_barang}`}
-                    </span>
-                    <span className="font-bold text-slate-800 dark:text-slate-100">
-                      {item.total_terjual} terjual
-                    </span>
-                  </div>
-                  <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-slate-700 dark:bg-slate-300"
-                      style={{
-                        width: `${Math.min(100, (item.total_terjual / (stats.barang_terlaris[0]?.total_terjual || 1)) * 100)}%`,
-                      }}
+                <div key={item.id_barang} className="flex items-center gap-3">
+                  {item.barang?.gambar ? (
+                    <img
+                      src={item.barang.gambar}
+                      alt={item.barang.nama_barang}
+                      className="w-8 h-8 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
                     />
+                  ) : (
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-400 shrink-0">
+                      <PackageIcon size={14} />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-semibold truncate max-w-[170px] text-slate-700 dark:text-slate-200">
+                        {idx + 1}. {item.barang?.nama_barang || `Barang #${item.id_barang}`}
+                      </span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100 shrink-0">
+                        {item.total_terjual} terjual
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-slate-700 dark:bg-slate-300"
+                        style={{
+                          width: `${Math.min(100, (item.total_terjual / (stats.barang_terlaris[0]?.total_terjual || 1)) * 100)}%`,
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               ))
@@ -304,17 +318,30 @@ export default function AdminDashboard() {
               lowStockItems.slice(0, 5).map((b) => (
                 <div
                   key={b.id_barang}
-                  className="p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-between"
+                  className="p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-between gap-3"
                 >
-                  <div>
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                      {b.nama_barang}
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      Kode: {b.kode_barang} • Min: {b.stok_minimum} {b.satuan}
-                    </p>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {b.gambar ? (
+                      <img
+                        src={b.gambar}
+                        alt={b.nama_barang}
+                        className="w-9 h-9 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-400 shrink-0">
+                        <PackageIcon size={16} />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
+                        {b.nama_barang}
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        Kode: {b.kode_barang} • Min: {b.stok_minimum} {b.satuan}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <span className="text-xs font-bold px-2.5 py-1 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-600">
                       Sisa: {b.stok} {b.satuan}
                     </span>

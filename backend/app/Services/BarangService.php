@@ -87,7 +87,16 @@ class BarangService
             }
             $path = $gambar->store('barang', 'public');
             $data['gambar'] = '/storage/' . $path;
+        } elseif (!empty($data['hapus_gambar']) && filter_var($data['hapus_gambar'], FILTER_VALIDATE_BOOLEAN)) {
+            if ($barang->gambar && Storage::disk('public')->exists(str_replace('/storage/', '', $barang->gambar))) {
+                Storage::disk('public')->delete(str_replace('/storage/', '', $barang->gambar));
+            }
+            $data['gambar'] = null;
+        } else {
+            unset($data['gambar']);
         }
+
+        unset($data['hapus_gambar']);
 
         $barang->update($data);
 

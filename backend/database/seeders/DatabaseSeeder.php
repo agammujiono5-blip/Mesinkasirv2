@@ -130,6 +130,7 @@ class DatabaseSeeder extends Seeder
                 'stok' => 100,
                 'stok_minimum' => 10,
                 'satuan' => 'pack',
+                'gambar' => '/storage/barang/kopi_arabika.jpg',
             ]
         );
 
@@ -145,6 +146,7 @@ class DatabaseSeeder extends Seeder
                 'stok' => 50,
                 'stok_minimum' => 5,
                 'satuan' => 'unit',
+                'gambar' => '/storage/barang/wireless_mouse.jpg',
             ]
         );
 
@@ -160,6 +162,7 @@ class DatabaseSeeder extends Seeder
                 'stok' => 200,
                 'stok_minimum' => 20,
                 'satuan' => 'pcs',
+                'gambar' => '/storage/barang/buku_catatan.jpg',
             ]
         );
     }

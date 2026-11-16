@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Barang;
 use App\Services\BarangService;
+use App\Support\RoleAccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,9 +26,24 @@ class BarangController extends BaseApiController
         return $this->sendResponse($barang, 'Daftar barang berhasil diambil.');
     }
 
-    public function stokMinimum(): JsonResponse
+    /**
+     * Daftar stok menipis. Pengguna non-manajerial (kasir) hanya menerima
+     * identitas barang & sisa stok, tanpa data harga beli/supplier.
+     */
+    public function stokMinimum(Request $request): JsonResponse
     {
         $items = $this->barangService->getLowStockItems();
+
+        if (! $request->user()->hasRole(...RoleAccess::DASHBOARD_BISNIS)) {
+            $items = $items->map(fn (Barang $barang): array => [
+                'id_barang' => $barang->id_barang,
+                'kode_barang' => $barang->kode_barang,
+                'nama_barang' => $barang->nama_barang,
+                'stok' => $barang->stok,
+                'stok_minimum' => $barang->stok_minimum,
+                'satuan' => $barang->satuan,
+            ]);
+        }
 
         return $this->sendResponse($items, 'Daftar barang dengan stok menipis berhasil diambil.');
     }

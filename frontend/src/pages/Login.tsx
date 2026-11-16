@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { authApi, authStorage } from "../services/api";
-import type { UserSession } from "../services/api";
+import type { ModuleAccess, UserSession, UserRole } from "../services/api";
 import {
   LogoIcon,
   SunIcon,
@@ -12,19 +12,24 @@ import {
   ReceiptIcon,
   PackageIcon,
   AlertWarningIcon,
+  BriefcaseIcon,
 } from "../components/Icons";
 
-type Role = "kasir" | "admin";
+type Role = "manager" | "admin" | "kasir";
 interface LoginProps {
-  onLogin: (user: UserSession) => void;
+  onLogin: (
+    user: UserSession,
+    akses: Partial<ModuleAccess>,
+    roleDapatDikelola?: UserRole[]
+  ) => void;
   isDark: boolean;
   toggleDark: () => void;
 }
 
 export default function Login({ onLogin, isDark, toggleDark }: LoginProps) {
-  const [username, setUsername] = useState("admin");
+  const [username, setUsername] = useState("manager");
   const [password, setPassword] = useState("password123");
-  const [role, setRole] = useState<Role>("admin");
+  const [role, setRole] = useState<Role>("manager");
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -32,7 +37,10 @@ export default function Login({ onLogin, isDark, toggleDark }: LoginProps) {
   const handleRoleSwitch = (selectedRole: Role) => {
     setRole(selectedRole);
     setErrorMessage(null);
-    if (selectedRole === "admin") {
+    if (selectedRole === "manager") {
+      setUsername("manager");
+      setPassword("password123");
+    } else if (selectedRole === "admin") {
       setUsername("admin");
       setPassword("password123");
     } else {
@@ -50,7 +58,7 @@ export default function Login({ onLogin, isDark, toggleDark }: LoginProps) {
       const response = await authApi.login(username, password);
       authStorage.setToken(response.token);
       authStorage.setUser(response.user);
-      onLogin(response.user);
+      onLogin(response.user, response.akses, response.role_dapat_dikelola ?? []);
     } catch (err: any) {
       setErrorMessage(err.message || "Gagal masuk. Periksa username dan password Anda.");
     } finally {
@@ -155,28 +163,33 @@ export default function Login({ onLogin, isDark, toggleDark }: LoginProps) {
 
           {/* Role selector preset */}
           <div className="flex gap-2 p-1 rounded-xl mb-5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-            {(["admin", "kasir"] as Role[]).map((r) => {
+            {(["manager", "admin", "kasir"] as Role[]).map((r) => {
               const active = role === r;
               return (
                 <button
                   key={r}
                   type="button"
                   onClick={() => handleRoleSwitch(r)}
-                  className={`flex-1 py-2 rounded-lg text-xs font-bold capitalize transition-all flex items-center justify-center gap-2 ${
+                  className={`flex-1 py-2 px-1 rounded-lg text-xs font-bold capitalize transition-all flex items-center justify-center gap-1.5 ${
                     active
                       ? "bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900 shadow-sm"
                       : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
                   }`}
                 >
-                  {r === "kasir" ? (
+                  {r === "manager" ? (
+                    <>
+                      <BriefcaseIcon size={14} className={active ? "text-white dark:text-slate-900" : "text-slate-400"} />
+                      <span>Manager</span>
+                    </>
+                  ) : r === "kasir" ? (
                     <>
                       <CartIcon size={14} className={active ? "text-white dark:text-slate-900" : "text-slate-400"} />
-                      <span>Akun Kasir</span>
+                      <span>Kasir</span>
                     </>
                   ) : (
                     <>
                       <ShieldCheckIcon size={14} className={active ? "text-white dark:text-slate-900" : "text-slate-400"} />
-                      <span>Akun Admin</span>
+                      <span>Admin</span>
                     </>
                   )}
                 </button>
@@ -203,7 +216,7 @@ export default function Login({ onLogin, isDark, toggleDark }: LoginProps) {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="admin / kasir1"
+                  placeholder="manager / admin / kasir1"
                   className="w-full pl-9 pr-4 py-3 text-sm rounded-xl outline-none transition-all border border-slate-200 dark:border-slate-800 focus:border-slate-400 bg-slate-50/50 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200"
                 />
               </div>
@@ -251,16 +264,17 @@ export default function Login({ onLogin, isDark, toggleDark }: LoginProps) {
                   Menghubungkan...
                 </span>
               ) : (
-                `Masuk sebagai ${role === "kasir" ? "Kasir" : "Admin"}`
+                `Masuk sebagai ${role === "manager" ? "Manager (Executive MIS)" : role === "kasir" ? "Kasir Operasional" : "Admin Toko"}`
               )}
             </button>
           </form>
 
           <div className="mt-6 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-            <p className="text-xs font-semibold mb-2 text-slate-500">Akun Database Siap Pakai:</p>
+            <p className="text-xs font-semibold mb-2 text-slate-500">Role dan Password untuk login:</p>
             <div className="space-y-1">
-              <p className="text-xs text-slate-500">Admin → <span className="font-mono font-bold text-slate-700 dark:text-slate-300">admin / password123</span></p>
-              <p className="text-xs text-slate-500">Kasir → <span className="font-mono font-bold text-slate-700 dark:text-slate-300">kasir1 / password123</span></p>
+              <p className="text-xs text-slate-500">Manager (MIS Cockpit) → <span className="font-mono font-bold text-slate-700 dark:text-slate-300">manager / password123</span></p>
+              <p className="text-xs text-slate-500">Admin Toko → <span className="font-mono font-bold text-slate-700 dark:text-slate-300">admin / password123</span></p>
+              <p className="text-xs text-slate-500">Kasir Operasional → <span className="font-mono font-bold text-slate-700 dark:text-slate-300">kasir1 / password123</span></p>
             </div>
           </div>
         </div>

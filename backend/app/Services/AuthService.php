@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Karyawan;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -20,7 +21,7 @@ class AuthService
             'password' => $data['password'],
             'no_hp' => $data['no_hp'] ?? null,
             'alamat' => $data['alamat'] ?? null,
-            'role' => $data['role'] ?? 'pelanggan',
+            'role' => 'pelanggan',
             'status' => 'aktif',
         ]);
 
@@ -28,6 +29,9 @@ class AuthService
 
         return [
             'user' => $user,
+            'karyawan' => $user->karyawan,
+            'akses' => $user->moduleAccess(),
+            'permissions' => $user->permissionCodes(),
             'token' => $token,
         ];
     }
@@ -41,7 +45,8 @@ class AuthService
             ->orWhere('username', $identifier)
             ->first();
 
-        if (!$user || !Hash::check($password, $user->password)) {
+        // Cek user lebih dulu agar identifier tak dikenal tidak memicu error.
+        if (! $user || ! Hash::check($password, $user->password)) {
             throw ValidationException::withMessages([
                 'identifier' => ['Kredensial yang diberikan tidak cocok dengan data kami.'],
             ]);
@@ -57,8 +62,19 @@ class AuthService
 
         return [
             'user' => $user,
+            'karyawan' => $user->karyawan,
+            'akses' => $user->moduleAccess(),
+            'permissions' => $user->permissionCodes(),
             'token' => $token,
         ];
+    }
+
+    /**
+     * Data kepegawaian (jika ada) yang tertaut ke akun login ini.
+     */
+    public function karyawanOf(User $user): ?Karyawan
+    {
+        return $user->karyawan;
     }
 
     /**
@@ -67,6 +83,7 @@ class AuthService
     public function logout(User $user): bool
     {
         $user->currentAccessToken()->delete();
+
         return true;
     }
 
@@ -91,7 +108,7 @@ class AuthService
      */
     public function changePassword(User $user, string $currentPassword, string $newPassword): bool
     {
-        if (!Hash::check($currentPassword, $user->password)) {
+        if (! Hash::check($currentPassword, $user->password)) {
             throw ValidationException::withMessages([
                 'current_password' => ['Password saat ini tidak sesuai.'],
             ]);

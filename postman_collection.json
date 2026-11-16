@@ -1328,7 +1328,71 @@
       ]
     },
     {
-      "name": "11. Permissions & Roles (Admin/Owner)",
+      "name": "11. MIS (Manager Information System)",
+      "item": [
+        {
+          "name": "MIS Executive Analytics (Admin/Owner/Manager)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/executive?periode=bulan_ini",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "executive"
+              ],
+              "query": [
+                {
+                  "key": "periode",
+                  "value": "bulan_ini"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "MIS Disposisi Rekomendasi Restok (Admin/Owner/Manager)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Disetujui\",\n  \"catatan\": \"Disetujui melalui Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dashboard/rekomendasi/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "rekomendasi",
+                "1"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "12. Permissions & Roles (Admin/Owner)",
       "item": [
         {
           "name": "Get All Permissions",
@@ -1400,6 +1464,472 @@
               "path": [
                 "permissions",
                 "sync"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "13. DSS (Decision Support System)",
+      "item": [
+        {
+          "name": "DSS Dashboard (Ringkasan + Peringkat + Konteks ES)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dss/dashboard?periode=all_time",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dss",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "periode",
+                  "value": "all_time"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "DSS Status Sumber Data (TPS/OAS/KMS/MIS)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dss/data-sources",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dss",
+                "data-sources"
+              ]
+            }
+          }
+        },
+        {
+          "name": "DSS Alternatif (Nilai Kriteria dari TPS)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dss/alternatives?periode=all_time&scope=relevan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dss",
+                "alternatives"
+              ],
+              "query": [
+                {
+                  "key": "periode",
+                  "value": "all_time"
+                },
+                {
+                  "key": "scope",
+                  "value": "relevan"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "DSS Kriteria & Bobot",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dss/criteria",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dss",
+                "criteria"
+              ]
+            }
+          }
+        },
+        {
+          "name": "DSS Update Bobot Kriteria",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bobot\": {\n    \"C1\": 35,\n    \"C2\": 25,\n    \"C3\": 20,\n    \"C4\": 20\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dss/criteria",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dss",
+                "criteria"
+              ]
+            }
+          }
+        },
+        {
+          "name": "DSS Simulasi SAW (Tidak Disimpan)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"periode\": \"all_time\",\n  \"bobot\": {\n    \"C1\": 40,\n    \"C2\": 20,\n    \"C3\": 20,\n    \"C4\": 20\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dss/simulate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dss",
+                "simulate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "DSS Analisis SAW (Simpan Riwayat)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"periode\": \"all_time\",\n  \"judul\": \"Prioritas Restok Barang\",\n  \"catatan\": \"Analisis dari Postman\",\n  \"bobot\": {\n    \"C1\": 35,\n    \"C2\": 25,\n    \"C3\": 20,\n    \"C4\": 20\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dss/analyze",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dss",
+                "analyze"
+              ]
+            }
+          }
+        },
+        {
+          "name": "DSS Riwayat Analisis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dss/history?limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dss",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "DSS Detail Riwayat",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dss/history/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dss",
+                "history",
+                "1"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "14. Expert System (Sistem Pakar)",
+      "item": [
+        {
+          "name": "ES Dashboard (Ringkasan + Sumber Data + Deteksi Otomatis)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/es/dashboard?periode=90_hari",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "es",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "periode",
+                  "value": "90_hari"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "ES Daftar Gejala",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/es/gejala",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "es",
+                "gejala"
+              ]
+            }
+          }
+        },
+        {
+          "name": "ES Daftar Hipotesis (Kerusakan/Kondisi)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/es/kerusakan?kategori=stok",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "es",
+                "kerusakan"
+              ],
+              "query": [
+                {
+                  "key": "kategori",
+                  "value": "stok"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "ES Basis Aturan (IF-THEN)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/es/aturan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "es",
+                "aturan"
+              ]
+            }
+          }
+        },
+        {
+          "name": "ES Simulasi Diagnosa (Tidak Disimpan)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gejala\": [\n    \"G01\",\n    \"G02\",\n    \"G03\"\n  ],\n  \"otomatis\": true,\n  \"periode\": \"90_hari\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/es/simulate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "es",
+                "simulate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "ES Diagnosa (Simpan Riwayat)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gejala\": [\n    \"G01\",\n    \"G02\",\n    \"G03\"\n  ],\n  \"otomatis\": true,\n  \"periode\": \"90_hari\",\n  \"catatan\": \"Diagnosa dari Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/es/diagnose",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "es",
+                "diagnose"
+              ]
+            }
+          }
+        },
+        {
+          "name": "ES Riwayat Diagnosa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/es/history?limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "es",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "ES Detail Riwayat",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/es/history/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "es",
+                "history",
+                "1"
               ]
             }
           }

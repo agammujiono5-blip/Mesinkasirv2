@@ -1,14 +1,28 @@
 import { useState, useEffect, useCallback } from "react";
 import { userApi } from "../services/api";
-import type { UserSession } from "../services/api";
+import type { UserRole, UserSession } from "../services/api";
 import {
   PlusIcon,
   TrashIcon,
   CloseIcon,
   SearchIcon,
+  ShieldCheckIcon,
 } from "./Icons";
 
-export default function Users() {
+const LABEL_ROLE: Record<UserRole, string> = {
+  admin: "Admin",
+  manager: "Manager",
+  kasir: "Kasir",
+  pelanggan: "Pelanggan",
+  owner: "Owner",
+};
+
+interface UsersProps {
+  /** Role yang boleh dibuat oleh pengguna ini (dihitung server). */
+  roleDapatDikelola?: UserRole[];
+}
+
+export default function Users({ roleDapatDikelola = [] }: UsersProps) {
   const [users, setUsers] = useState<UserSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -23,9 +37,13 @@ export default function Users() {
     password: "password123",
     no_hp: "",
     alamat: "",
-    role: "kasir" as "admin" | "kasir" | "pelanggan" | "owner" | "manager",
+    role: "kasir" as UserRole,
     status: "aktif" as "aktif" | "nonaktif",
   });
+
+  /** Role yang dapat dibuat: dari server, fallback aman ke role operasional. */
+  const roleTersedia: UserRole[] =
+    roleDapatDikelola.length > 0 ? roleDapatDikelola : ["kasir", "pelanggan"];
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -43,6 +61,7 @@ export default function Users() {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +92,9 @@ export default function Users() {
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Manajemen Pengguna & Akun</h2>
-          <p className="text-xs text-slate-400">Kelola akun admin, kasir, dan pelanggan di database</p>
+          <p className="text-xs text-slate-400">
+            Kelola akun pengguna. Akun berjabatan lebih tinggi (manager/owner) hanya dapat diubah owner.
+          </p>
         </div>
 
         <div className="flex gap-2 w-full sm:w-auto">
@@ -89,6 +110,19 @@ export default function Users() {
               <SearchIcon size={13} />
             </div>
           </div>
+
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            aria-label="Filter role pengguna"
+            className="px-3 py-2 text-xs rounded-xl border outline-none font-semibold border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200"
+          >
+            <option value="">Semua role</option>
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="kasir">Kasir</option>
+            <option value="pelanggan">Pelanggan</option>
+          </select>
 
           <button
             onClick={() => setShowModal(true)}
@@ -146,13 +180,23 @@ export default function Users() {
                     </span>
                   </td>
                   <td className="p-4 text-right">
-                    <button
-                      onClick={() => handleDelete(u.id_user)}
-                      className="p-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 transition-all inline-flex items-center gap-1"
-                    >
-                      <TrashIcon size={12} />
-                      <span>Hapus</span>
-                    </button>
+                    {u.boleh_dikelola === false ? (
+                      <span
+                        title="Akun berjabatan lebih tinggi hanya dapat dikelola owner"
+                        className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1"
+                      >
+                        <ShieldCheckIcon size={11} />
+                        <span>Terlindungi</span>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleDelete(u.id_user)}
+                        className="p-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 transition-all inline-flex items-center gap-1"
+                      >
+                        <TrashIcon size={12} />
+                        <span>Hapus</span>
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))
@@ -229,13 +273,14 @@ export default function Users() {
                   <label className="font-bold text-slate-500 block mb-1">Role Akun</label>
                   <select
                     value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
                     className="w-full px-3 py-2 rounded-xl border outline-none font-semibold border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200"
                   >
-                    <option value="kasir">Kasir</option>
-                    <option value="admin">Admin</option>
-                    <option value="manager">Manager</option>
-                    <option value="pelanggan">Pelanggan</option>
+                    {roleTersedia.map((role) => (
+                      <option key={role} value={role}>
+                        {LABEL_ROLE[role]}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>

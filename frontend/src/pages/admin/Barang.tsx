@@ -207,6 +207,20 @@ export default function AdminBarang() {
             </div>
           </div>
 
+          <select
+            value={selectedCat ?? ""}
+            onChange={(e) => setSelectedCat(e.target.value ? Number(e.target.value) : undefined)}
+            aria-label="Filter kategori produk"
+            className="px-3 py-2 text-xs rounded-xl border outline-none font-semibold border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200"
+          >
+            <option value="">Semua kategori</option>
+            {categories.map((c) => (
+              <option key={c.id_kategori} value={c.id_kategori}>
+                {c.nama_kategori}
+              </option>
+            ))}
+          </select>
+
           <button
             onClick={openCreateModal}
             className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 dark:bg-slate-200 dark:text-slate-900 rounded-xl shadow-sm whitespace-nowrap transition-all"
@@ -539,7 +553,7 @@ export default function AdminBarang() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ImageIcon size={16} className="text-slate-400" />
-                <h4 className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate max-w-[260px]">
+                <h4 className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate max-w-260px">
                   {previewModalImg.title}
                 </h4>
               </div>

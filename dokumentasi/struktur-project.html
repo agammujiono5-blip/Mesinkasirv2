@@ -1,0 +1,87 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Struktur Project</title>
+<style>
+body{font-family:-apple-system,'SF Pro Text',sans-serif;background:#0f172a;color:#e2e8f0;padding:32px;margin:0}
+h1{font-size:20px;margin:0 0 4px}
+p.sub{color:#94a3b8;font-size:12px;margin:0 0 20px}
+.card{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:20px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.75;white-space:pre;overflow:auto}
+.dss{color:#6ee7b7;font-weight:700}
+.exist{color:#cbd5e1}
+.dir{color:#93c5fd;font-weight:600}
+.legend{margin-top:14px;font-size:11px;color:#94a3b8}
+.badge{background:#064e3b;color:#6ee7b7;border:1px solid #047857;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700}
+</style></head><body>
+<h1>Sistem Informasi KasirPro — Struktur Project</h1>
+<p class="sub">Laravel 13.29 (PHP 8.4) · MySQL dbtugasmg · React 19 + Vite + Tailwind 4 &nbsp; <span class="badge">DSS = file baru</span></p>
+<div class="card" id="tree">MEMUAT...</div>
+<div class="legend">Hijau tebal = file baru untuk modul DSS. Putih = file existing yang tidak dihapus/dirusak.</div>
+<script>
+const dss = new Set([
+'DssController.php','DssAnalisis.php','DssHasilAlternatif.php','DssKriteria.php',
+'DssDataService.php','DssService.php','SawService.php',
+'2026_10_19_000001_create_dss_tables.php','DssKriteriaSeeder.php',
+'DssApiTest.php','SawServiceTest.php','DssDashboard.tsx']);
+const tree = `KasirPro/  (root project existing)
+├── backend/                         <span class="dir">Laravel 13.29 — PHP 8.4 — MySQL</span>
+│   ├── app/
+│   │   ├── Http/Controllers/Api/
+│   │   │   ├── AuthController.php           (existing)
+│   │   │   ├── BaseApiController.php        (existing — dipakai DSS)
+│   │   │   ├── BarangController.php         (existing)
+│   │   │   ├── DashboardController.php      (existing — MIS executive)
+│   │   │   ├── DiskonController.php         (existing)
+│   │   │   ├── KategoriController.php       (existing)
+│   │   │   ├── PembelianController.php      (existing)
+│   │   │   ├── PermissionController.php     (existing)
+│   │   │   ├── StokLogController.php        (existing)
+│   │   │   ├── SupplierController.php       (existing)
+│   │   │   ├── TransaksiController.php      (existing)
+│   │   │   ├── UserController.php           (existing)
+│   │   │   └── DssController.php            <span class="dss">← BARU (DSS)</span>
+│   │   ├── Http/Middleware/CheckRole.php    (existing — dipakai otorisasi DSS)
+│   │   ├── Models/
+│   │   │   ├── Barang.php  DetailTransaksi.php  Kategori.php
+│   │   │   ├── Pembelian.php  StokLog.php  Supplier.php  Transaksi.php  User.php
+│   │   │   ├── DssKriteria.php              <span class="dss">← BARU (DSS)</span>
+│   │   │   ├── DssAnalisis.php              <span class="dss">← BARU (DSS)</span>
+│   │   │   └── DssHasilAlternatif.php       <span class="dss">← BARU (DSS)</span>
+│   │   └── Services/
+│   │       ├── AuthService.php  BarangService.php  DashboardService.php
+│   │       ├── DiskonService.php  KategoriService.php  PembelianService.php
+│   │       ├── PermissionService.php  StokLogService.php  SupplierService.php
+│   │       ├── TransaksiService.php  UserService.php
+│   │       ├── SawService.php               <span class="dss">← BARU (mesin SAW)</span>
+│   │       ├── DssDataService.php           <span class="dss">← BARU (integrasi TPS/OAS/KMS/MIS)</span>
+│   │       └── DssService.php               <span class="dss">← BARU (orkestrator DSS)</span>
+│   ├── routes/api.php                       (DIUBAH — hanya menambah blok /dss)
+│   ├── database/
+│   │   ├── migrations/
+│   │   │   ├── 0001_01_01_000000_create_users_table.php … s.d.
+│   │   │   ├── 2026_01_01_000011_create_stok_log_table.php   (existing)
+│   │   │   ├── 2026_08_31_013125_create_personal_access_tokens_table.php
+│   │   │   └── 2026_10_19_000001_create_dss_tables.php       <span class="dss">← BARU (additive)</span>
+│   │   └── seeders/
+│   │       ├── DatabaseSeeder.php  SampleSalesSeeder.php     (existing)
+│   │       └── DssKriteriaSeeder.php                         <span class="dss">← BARU</span>
+│   └── tests/
+│       ├── Feature/ExampleTest.php  Unit/ExampleTest.php     (existing)
+│       ├── Feature/DssApiTest.php                            <span class="dss">← BARU (16 test)</span>
+│       └── Unit/SawServiceTest.php                           <span class="dss">← BARU (12 test)</span>
+└── frontend/                        <span class="dir">React 19 + TypeScript + Vite + Tailwind 4</span>
+    ├── vite.config.ts                       (DIUBAH — proxy target bisa via env, default tetap :8000)
+    └── src/
+        ├── App.tsx                          (DIUBAH — tambah case "dss")
+        ├── components/
+        │   ├── AdminLayout.tsx              (DIUBAH — menu DSS di grup MIS)
+        │   ├── Icons.tsx                    (DIUBAH — tambah ikon DSS)
+        │   └── Dashboard.tsx Barang.tsx Kategori.tsx …     (existing)
+        ├── services/api.ts                  (DIUBAH — tambah dssApi, kode lama utuh)
+        └── pages/admin/
+            ├── Dashboard.tsx  MisManager.tsx  Barang.tsx … (existing)
+            └── DssDashboard.tsx             <span class="dss">← BARU (UI DSS)</span>`;
+
+const esc = s => s;
+document.getElementById('tree').innerHTML = tree
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/&lt;span class="dss"&gt;(.*?)&lt;\/span&gt;/g, '<span class="dss">$1</span>')
+  .replace(/&lt;span class="dir"&gt;(.*?)&lt;\/span&gt;/g, '<span class="dir">$1</span>');
+</script></body></html>

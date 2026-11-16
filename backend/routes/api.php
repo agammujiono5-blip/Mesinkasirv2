@@ -4,6 +4,9 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BarangController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DiskonController;
+use App\Http\Controllers\Api\DssController;
+use App\Http\Controllers\Api\EsController;
+use App\Http\Controllers\Api\KaryawanController;
 use App\Http\Controllers\Api\KategoriController;
 use App\Http\Controllers\Api\PembelianController;
 use App\Http\Controllers\Api\PermissionController;
@@ -11,6 +14,7 @@ use App\Http\Controllers\Api\StokLogController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\TransaksiController;
 use App\Http\Controllers\Api\UserController;
+use App\Support\RoleAccess;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -42,7 +46,57 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('dashboard')->group(function () {
         Route::get('/stats', [DashboardController::class, 'stats']);
         Route::get('/chart', [DashboardController::class, 'chart']);
+
+        // MIS - laporan & analitik eksekutif (admin, owner, manager)
+        Route::middleware('role:admin,owner,manager')->group(function () {
+            Route::get('/executive', [DashboardController::class, 'executive']);
+            Route::put('/rekomendasi/{id}', [DashboardController::class, 'updateRestock'])->whereNumber('id');
+        });
     });
+
+    // DSS - Decision Support System (lanjutan MIS: TPS + OAS + KMS -> MIS -> DSS)
+    Route::prefix('dss')
+        ->middleware('role:admin,owner,manager')
+        ->group(function () {
+            Route::get('/dashboard', [DssController::class, 'dashboard']);
+            Route::get('/data-sources', [DssController::class, 'dataSources']);
+            Route::get('/alternatives', [DssController::class, 'alternatives']);
+            Route::get('/criteria', [DssController::class, 'criteria']);
+            Route::get('/history', [DssController::class, 'history']);
+            Route::get('/history/{id}', [DssController::class, 'historyDetail'])->whereNumber('id');
+            Route::post('/simulate', [DssController::class, 'simulate']);
+
+            // Aksi yang menyimpan riwayat keputusan
+            Route::middleware('role:admin,owner,manager')->group(function () {
+                Route::post('/analyze', [DssController::class, 'analyze']);
+            });
+
+            // Bobot kriteria hanya boleh diubah admin/owner
+            Route::middleware('role:admin,owner')->group(function () {
+                Route::put('/criteria', [DssController::class, 'updateCriteria']);
+            });
+        });
+
+    // ES - Expert System (lanjutan DSS: TPS + OAS + KMS -> MIS -> DSS -> ES)
+    Route::prefix('es')
+        ->middleware('role:admin,owner,manager,kasir')
+        ->group(function () {
+            Route::get('/dashboard', [EsController::class, 'dashboard']);
+            Route::get('/gejala', [EsController::class, 'gejala']);
+            Route::get('/kerusakan', [EsController::class, 'kerusakan']);
+            Route::get('/aturan', [EsController::class, 'aturan']);
+            Route::get('/history', [EsController::class, 'history']);
+            Route::get('/history/{id}', [EsController::class, 'historyDetail'])->whereNumber('id');
+            Route::post('/simulate', [EsController::class, 'simulate']);
+
+            // Aksi yang menyimpan riwayat diagnosa
+            Route::middleware('role:admin,owner,manager')->group(function () {
+                Route::post('/diagnose', [EsController::class, 'diagnose']);
+            });
+        });
+
+    // Data kepegawaian milik user sendiri (semua role ber-login)
+    Route::get('/karyawan/me', [KaryawanController::class, 'me']);
 
     // Users Management (Admin, Owner)
     Route::middleware('role:admin,owner')->group(function () {
@@ -107,10 +161,27 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/stok-log/penyesuaian', [StokLogController::class, 'penyesuaian']);
     });
 
-    // Permissions & Roles
+    // Karyawan (kepegawaian) — admin, manager
+    Route::middleware('role:admin,manager')->group(function () {
+        Route::get('/karyawan', [KaryawanController::class, 'index']);
+        Route::post('/karyawan', [KaryawanController::class, 'store']);
+        Route::get('/karyawan/{id}', [KaryawanController::class, 'show'])->whereNumber('id');
+        Route::match(['put', 'patch'], '/karyawan/{id}', [KaryawanController::class, 'update'])->whereNumber('id');
+    });
+
+    // Aksi kepegawaian yang menyentuh akun login: hanya admin
+    Route::middleware('role:admin')->group(function () {
+        Route::delete('/karyawan/{id}', [KaryawanController::class, 'destroy'])->whereNumber('id');
+        Route::put('/karyawan/{id}/status', [KaryawanController::class, 'updateStatus'])->whereNumber('id');
+        Route::post('/karyawan/{id}/akun', [KaryawanController::class, 'buatAkun'])->whereNumber('id');
+        Route::post('/karyawan/{id}/akun/sinkron', [KaryawanController::class, 'sinkronkanAkun'])->whereNumber('id');
+    });
+
+    // Permissions & Roles (admin, owner)
     Route::middleware('role:admin,owner')->group(function () {
         Route::get('/permissions', [PermissionController::class, 'index']);
-        Route::get('/permissions/role/{role}', [PermissionController::class, 'getByRole']);
+        Route::get('/permissions/role/{role}', [PermissionController::class, 'getByRole'])
+            ->whereIn('role', RoleAccess::ROLES);
         Route::post('/permissions/sync', [PermissionController::class, 'sync']);
     });
 });

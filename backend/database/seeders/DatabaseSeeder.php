@@ -18,6 +18,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Basis pengetahuan modul lanjutan MIS (DSS & Expert System)
+        $this->call([
+            DssKriteriaSeeder::class,
+            EsBasisPengetahuanSeeder::class,
+        ]);
+
         // 1. Users
         $admin = User::firstOrCreate(
             ['username' => 'admin'],
@@ -70,6 +76,27 @@ class DatabaseSeeder extends Seeder
             ['kode_permission' => 'manage_pembelian', 'deskripsi' => 'Melakukan restok dan pembelian dari supplier'],
             ['kode_permission' => 'manage_stok', 'deskripsi' => 'Audit riwayat dan penyesuaian stok opname'],
             ['kode_permission' => 'view_dashboard', 'deskripsi' => 'Melihat statistik ringkasan dan dashboard'],
+            ['kode_permission' => 'view_mis', 'deskripsi' => 'Melihat laporan dan analitik eksekutif MIS'],
+            ['kode_permission' => 'manage_rekomendasi', 'deskripsi' => 'Memutuskan disposisi rekomendasi restok (MIS)'],
+            ['kode_permission' => 'view_dss', 'deskripsi' => 'Melihat dashboard dan simulasi DSS'],
+            ['kode_permission' => 'analyze_dss', 'deskripsi' => 'Menjalankan analisis DSS dan menyimpan riwayat'],
+            ['kode_permission' => 'manage_dss_kriteria', 'deskripsi' => 'Mengubah bobot kriteria DSS'],
+            ['kode_permission' => 'view_es', 'deskripsi' => 'Melihat gejala, basis pengetahuan, dan riwayat ES'],
+            ['kode_permission' => 'diagnose_es', 'deskripsi' => 'Menjalankan dan menyimpan diagnosa ES'],
+            ['kode_permission' => 'manage_karyawan', 'deskripsi' => 'Kelola data kepegawaian karyawan'],
+            ['kode_permission' => 'manage_karyawan_akun', 'deskripsi' => 'Kelola akun login dan status karyawan'],
+        ];
+
+        // Matriks permission per role. 'admin' selalu mendapat seluruh permission.
+        $permissionPerRole = [
+            'owner' => array_column($permissionsList, 'kode_permission'),
+            'manager' => [
+                'manage_barang', 'manage_kategori', 'manage_supplier', 'manage_diskon',
+                'view_transaksi', 'manage_pembelian', 'manage_stok', 'view_dashboard',
+                'view_mis', 'manage_rekomendasi', 'view_dss', 'analyze_dss',
+                'view_es', 'diagnose_es', 'manage_karyawan',
+            ],
+            'kasir' => ['create_transaksi', 'view_transaksi', 'view_dashboard', 'view_es', 'diagnose_es'],
         ];
 
         foreach ($permissionsList as $pData) {
@@ -78,17 +105,19 @@ class DatabaseSeeder extends Seeder
                 ['deskripsi' => $pData['deskripsi']]
             );
 
-            // Give admin all permissions
             RolePermission::firstOrCreate([
                 'role' => 'admin',
                 'id_permission' => $perm->id_permission,
             ]);
+        }
 
-            // Give kasir cashier-specific permissions
-            if (in_array($pData['kode_permission'], ['create_transaksi', 'view_transaksi', 'view_dashboard'])) {
+        foreach ($permissionPerRole as $role => $codes) {
+            $ids = Permission::whereIn('kode_permission', $codes)->pluck('id_permission');
+
+            foreach ($ids as $idPermission) {
                 RolePermission::firstOrCreate([
-                    'role' => 'kasir',
-                    'id_permission' => $perm->id_permission,
+                    'role' => $role,
+                    'id_permission' => $idPermission,
                 ]);
             }
         }

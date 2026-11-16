@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><title>Uji Endpoint DSS</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:-apple-system,'SF Pro Text',sans-serif;background:#f1f5f9;margin:0;padding:28px;color:#0f172a}
+h1{font-size:20px;margin:0 0 4px}
+p.sub{color:#64748b;font-size:12px;margin:0 0 18px}
+.bar{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+button{background:#1e293b;color:#fff;border:0;border-radius:10px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer}
+button:disabled{opacity:.5;cursor:default}
+.tok{font-family:ui-monospace,monospace;font-size:10px;background:#e2e8f0;color:#475569;padding:4px 8px;border-radius:6px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,.08);font-size:12px}
+th{background:#f8fafc;text-align:left;padding:10px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#64748b;border-bottom:1px solid #e2e8f0}
+td{padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+tr:last-child td{border-bottom:0}
+.m{font-family:ui-monospace,monospace;font-weight:700;font-size:11px}
+.ok{color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:800}
+.err{color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:800}
+.sum{padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700;background:#e0e7ff;color:#3730a3}
+pre{font-family:ui-monospace,monospace;font-size:10px;background:#0f172a;color:#cbd5e1;padding:10px;border-radius:8px;max-height:130px;overflow:auto;margin:6px 0 0;white-space:pre-wrap;word-break:break-all}
+.note{font-size:10px;color:#94a3b8;margin-top:10px}
+</style></head>
+<body>
+<h1>Pengujian Endpoint API DSS — KasirPro</h1>
+<p class="sub">Setiap baris di bawah adalah hasil <strong>request HTTP nyata</strong> ke backend Laravel yang berjalan (bukan mockup). Klik “Jalankan Ulang” untuk mengulang pengujian live.</p>
+<div class="bar">
+  <button id="run">Jalankan Ulang Pengujian</button>
+  <span class="sum" id="sum">Menunggu…</span>
+  <span class="tok" id="tok">token: -</span>
+</div>
+<table><thead><tr>
+<th style="width:74px">Metode</th><th style="width:230px">Endpoint</th><th style="width:120px">Peran</th>
+<th style="width:86px">HTTP</th><th style="width:110px">Waktu</th><th>Ringkasan Respons</th>
+</tr></thead><tbody id="rows"></tbody></table>
+<p class="note">Dijalankan pada <span id="ts">-</span>. Backend: Laravel 13.29 · Database: MySQL <code>dbtugasmg</code> · Auth: Sanctum Bearer Token.</p>
+<script>
+const API = 'http://127.0.0.1:8001/api';
+const tests = [
+  { m:'POST', p:'/auth/login', role:'public', body:{identifier:'manager',password:'password123'}, label:'Login manager (Sanctum)' },
+  { m:'GET',  p:'/dss/dashboard', role:'manager', label:'Dashboard DSS (kriteria, peringkat, sumber data)' },
+  { m:'GET',  p:'/dss/data-sources', role:'manager', label:'Status integrasi TPS / OAS / KMS / MIS' },
+  { m:'GET',  p:'/dss/criteria', role:'manager', label:'Kriteria & bobot aktif' },
+  { m:'GET',  p:'/dss/alternatives', role:'manager', label:'Alternatif + nilai kriteria dari TPS' },
+  { m:'POST', p:'/dss/simulate', role:'manager', body:{periode:'all_time',bobot:{C1:40,C2:20,C3:20,C4:20}}, label:'Simulasi bobot (tidak disimpan)' },
+  { m:'POST', p:'/dss/simulate', role:'manager', body:{periode:'all_time',bobot:{C1:50,C2:30,C3:20,C4:20}}, label:'Validasi bobot ≠ 100% → ditolak', expectError:true },
+  { m:'POST', p:'/dss/analyze', role:'manager', body:{periode:'all_time',judul:'Uji Endpoint Otomatis',bobot:{C1:35,C2:25,C3:20,C4:20}}, label:'Analisis SAW + simpan riwayat' },
+  { m:'GET',  p:'/dss/history', role:'manager', label:'Riwayat analisis' },
+  { m:'GET',  p:'/dss/history/1', role:'manager', label:'Detail riwayat (bobot, skor, peringkat, waktu)' },
+  { m:'GET',  p:'/dashboard/stats', role:'manager', label:'REGRESI: endpoint MIS/dashboard existing' },
+  { m:'GET',  p:'/dashboard/executive', role:'manager', label:'REGRESI: MIS executive (TPS-OAS-KMS)' },
+  { m:'GET',  p:'/barang', role:'manager', label:'REGRESI: master barang' },
+  { m:'GET',  p:'/transaksi', role:'manager', label:'REGRESI: transaksi TPS' },
+  { m:'POST', p:'/dss/analyze', role:'kasir', body:{}, label:'Otorisasi: kasir tidak boleh menyimpan analisis', expectError:true },
+];
+let managerToken='', kasirToken='';
+
+const summarize = (json) => {
+  if (!json || typeof json !== 'object') return '—';
+  const d = json.data ?? json;
+  if (json.errors) return 'errors: ' + JSON.stringify(json.errors).slice(0,180);
+  if (Array.isArray(d)) return `${d.length} item`;
+  if (d.kriteria && d.peringkat) return `${d.kriteria.length} kriteria · ${d.peringkat.length} alternatif · top: ${d.rekomendasi_utama?.nama_alternatif ?? '-'} (${(d.rekomendasi_utama?.skor ?? 0).toFixed(4)})`;
+  if (d.sumber_data) return d.sumber_data.map(s=>`${s.modul}:${s.status}(${s.jumlah_record})`).join(' · ');
+  if (d.kriteria) return `${d.kriteria.length} kriteria · total bobot ${d.total_bobot}%`;
+  if (d.alternatif) return `${d.alternatif.length} alternatif · ${d.periode?.transaksi_periode ?? 0} transaksi`;
+  if (d.hasil) return `${d.hasil.length} hasil · top ${d.hasil[0]?.nama_alternatif} skor ${(d.hasil[0]?.skor??0).toFixed(4)}`;
+  if (Array.isArray(d.hasil)) return `${d.hasil.length} hasil tersimpan`;
+  if (d.bobot && d.hasil) return `${d.hasil.length} hasil · bobot ${JSON.stringify(d.bobot)}`;
+  if (d.token) return `token diterima · user ${d.user?.username} (${d.user?.role})`;
+  if (d.penjualan_hari_ini !== undefined) return `penjualan hari ini Rp ${Number(d.penjualan_hari_ini).toLocaleString('id-ID')} · ${d.total_barang} SKU`;
+  if (d.total_omset_all_time !== undefined) return `omset all-time Rp ${Number(d.total_omset_all_time).toLocaleString('id-ID')} · ${d.total_transaksi_all_time} transaksi`;
+  if (d.data && d.total !== undefined) return `${d.total} record`;
+  return Object.keys(json).slice(0,4).join(', ');
+};
+
+async function login(id, pass){
+  const r = await fetch(`${API}/auth/login`, { method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'}, body: JSON.stringify({identifier:id,password:pass}) });
+  const j = await r.json();
+  return j?.data?.token ?? '';
+}
+
+async function run(){
+  const btn = document.getElementById('run'); btn.disabled = true;
+  document.getElementById('rows').innerHTML = '';
+  managerToken = await login('manager','password123');
+  kasirToken = await login('kasir1','password123');
+  document.getElementById('tok').textContent = 'token: ' + (managerToken ? managerToken.slice(0,18)+'…' : 'gagal');
+
+  let pass=0, fail=0;
+  for (const t of tests){
+    const token = t.role === 'kasir' ? kasirToken : managerToken;
+    const headers = { 'Accept':'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    if (t.body) headers['Content-Type'] = 'application/json';
+    const t0 = performance.now();
+    let status=0, json=null, ok=false;
+    try {
+      const res = await fetch(API + t.p, { method: t.m, headers, body: t.body ? JSON.stringify(t.body) : undefined });
+      status = res.status;
+      json = await res.json().catch(()=>null);
+      ok = t.expectError ? (status >= 400) : (status >= 200 && status < 300);
+    } catch(e){ json = { error: String(e) }; }
+    const ms = Math.round(performance.now()-t0);
+    if (ok) pass++; else fail++;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="m">${t.m}</td>
+      <td class="m">${t.p}</td>
+      <td>${t.role}</td>
+      <td><span class="${ok?'ok':'err'}">${status}</span></td>
+      <td class="m">${ms} ms</td>
+      <td><strong style="font-size:11px">${t.label}</strong><pre>${JSON.stringify(json).slice(0,420)}</pre></td>`;
+    document.getElementById('rows').appendChild(tr);
+  }
+  document.getElementById('sum').textContent = `${pass} PASS · ${fail} FAIL · ${tests.length} pengujian`;
+  document.getElementById('sum').style.background = fail ? '#fee2e2' : '#d1fae5';
+  document.getElementById('sum').style.color = fail ? '#991b1b' : '#065f46';
+  document.getElementById('ts').textContent = new Date().toLocaleString('id-ID');
+  btn.disabled = false;
+}
+document.getElementById('run').addEventListener('click', run);
+run();
+</script></body></html>

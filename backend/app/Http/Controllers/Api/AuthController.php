@@ -28,8 +28,10 @@ class AuthController extends BaseApiController
             'password' => 'required|string|min:6|confirmed',
             'no_hp' => 'nullable|string|max:20',
             'alamat' => 'nullable|string|max:255',
-            'role' => 'nullable|in:admin,kasir,pelanggan,owner,manager',
         ]);
+
+        // Role tidak pernah diterima dari payload registrasi publik: akun baru
+        // selalu 'pelanggan'. Role internal diatur admin lewat manajemen user.
 
         $result = $this->authService->register($validated);
 
@@ -63,7 +65,15 @@ class AuthController extends BaseApiController
      */
     public function profile(Request $request): JsonResponse
     {
-        return $this->sendResponse($request->user(), 'Data profil berhasil diambil.');
+        $user = $request->user();
+
+        return $this->sendResponse([
+            'user' => $user,
+            'karyawan' => $this->authService->karyawanOf($user),
+            'akses' => $user->moduleAccess(),
+            'role_dapat_dikelola' => $user->roleYangBolehDikelola(),
+            'permissions' => $user->permissionCodes(),
+        ], 'Data profil berhasil diambil.');
     }
 
     /**

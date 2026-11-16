@@ -65,7 +65,7 @@ export default function Kasir({ user, onLogout, isDark, toggleDark }: KasirProps
   const [selectedCatId, setSelectedCatId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [payment, setPayment] = useState<'cash' | 'transfer' | 'qris' | 'debit' | 'kredit'>('cash');
+  const [payment, setPayment] = useState<'cash' | 'transfer' | 'qris' | 'debit'>('cash');
   const [cashInput, setCashInput] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
@@ -441,7 +441,7 @@ export default function Kasir({ user, onLogout, isDark, toggleDark }: KasirProps
 
         {/* Right: Cart & POS Checkout */}
         <div
-          className="w-96 lg:w-[420px] flex flex-col shrink-0 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+          className="w-80 lg:w-[400px] xl:w-[420px] flex flex-col shrink-0 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
         >
           {/* Header Cart */}
           <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">

@@ -4,10 +4,13 @@ import {
   authStorage,
 } from "../../services/api";
 import type {
+  EISKpi,
   MISExecutiveData,
   SopDocumentItem,
 } from "../../services/api";
 import {
+  AlertWarningIcon,
+  AwardIcon,
   BriefcaseIcon,
   TrendingUpIcon,
   ClockIcon,
@@ -20,11 +23,50 @@ import {
   SearchIcon,
   PrinterIcon,
   BuildingIcon,
+  SparkleIcon,
+  TrophyIcon,
+  FilterIcon,
 } from "../../components/Icons";
 
 const rupiah = (n: number) => "Rp " + Math.floor(n).toLocaleString("id-ID");
 
-type TabType = "overview" | "tps" | "oas" | "kms";
+const formatNilaiKpi = (nilai: number, satuan: EISKpi["satuan"]): string => {
+  switch (satuan) {
+    case "rupiah":
+      return rupiah(nilai);
+    case "persen":
+      return `${nilai}%`;
+    case "sku":
+      return `${nilai} SKU`;
+    case "rasio":
+      return `${nilai}x`;
+    default:
+      return nilai.toLocaleString("id-ID");
+  }
+};
+
+const eisWarnaKelas: Record<"hijau" | "kuning" | "merah", { chip: string; dot: string; bar: string; teks: string }> = {
+  hijau: {
+    chip: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900",
+    dot: "bg-emerald-500",
+    bar: "bg-emerald-500",
+    teks: "text-emerald-600 dark:text-emerald-400",
+  },
+  kuning: {
+    chip: "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-900",
+    dot: "bg-amber-500",
+    bar: "bg-amber-500",
+    teks: "text-amber-600 dark:text-amber-400",
+  },
+  merah: {
+    chip: "bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 border-red-200 dark:border-red-900",
+    dot: "bg-red-500",
+    bar: "bg-red-500",
+    teks: "text-red-600 dark:text-red-400",
+  },
+};
+
+type TabType = "overview" | "eis" | "tps" | "oas" | "kms";
 type PeriodeType = "hari_ini" | "7_hari" | "30_hari" | "kuartal";
 
 export default function MisManager() {
@@ -121,7 +163,7 @@ export default function MisManager() {
     );
   }
 
-  const { tps, oas, kms, overall_health_score, tps_subscore, oas_subscore, kms_subscore, insights } = data!;
+  const { tps, oas, kms, overall_health_score, tps_subscore, oas_subscore, kms_subscore, insights, eis } = data!;
 
   return (
     <div className="p-6 space-y-6 max-w-[1600px] mx-auto pb-16" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -361,6 +403,7 @@ export default function MisManager() {
         {(
           [
             { id: "overview", label: "Ringkasan Eksekutif (Tri-System)", icon: LayersIcon },
+            { id: "eis", label: "EIS (Executive Information System)", icon: SparkleIcon },
             { id: "tps", label: "Kinerja TPS (Transaksi & Finansial)", icon: TrendingUpIcon },
             { id: "oas", label: "Kinerja OAS (Administrasi & Shift)", icon: ClockIcon },
             { id: "kms", label: "Kinerja KMS (SOP, Audit & Pelatihan)", icon: BookOpenIcon },
@@ -573,6 +616,326 @@ export default function MisManager() {
               >
                 Eksplorasi Detail KMS →
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB EIS: EXECUTIVE INFORMATION SYSTEM (KPI, SCORECARD, EWS, PROYEKSI)    */}
+      {/* ========================================================================= */}
+      {tab === "eis" && (
+        <div className="space-y-6">
+          {/* Header EIS */}
+          <div className="rounded-3xl p-6 bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 text-white border border-slate-800 shadow-md flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+            <div className="max-w-2xl">
+              <div className="flex items-center gap-2 mb-1">
+                <SparkleIcon size={16} className="text-indigo-300" />
+                <span className="text-[11px] font-black uppercase tracking-widest text-indigo-300">
+                  Executive Information System
+                </span>
+              </div>
+              <h3 className="text-lg font-black tracking-tight">
+                Ringkasan Satu Halaman untuk Keputusan Eksekutif
+              </h3>
+              <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
+                KPI penting, balanced scorecard, peringatan dini, dan proyeksi omset dihitung secara otomatis dari data
+                TPS, OAS, dan KMS. Periode aktif: <b className="text-white">{periode.replace("_", " ").toUpperCase()}</b>.
+              </p>
+            </div>
+            <div className="flex items-center gap-6">
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Skor EIS</p>
+                <p className="text-4xl font-black text-white leading-none">
+                  {eis.balanced_scorecard.skor_total}
+                  <span className="text-base text-slate-400 font-semibold">/100</span>
+                </p>
+                <p className="text-[11px] font-bold text-indigo-300 mt-1">{eis.balanced_scorecard.predikat}</p>
+              </div>
+              <div className="w-px h-14 bg-slate-700/70" />
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Peringatan Dini</p>
+                <p className="text-4xl font-black text-white leading-none">{eis.peringatan_dini.length}</p>
+                <p className="text-[11px] font-semibold text-slate-400 mt-1">
+                  {eis.peringatan_dini.filter((p) => p.tingkat === "kritis").length} kritis
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* KPI CARDS */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <TrophyIcon size={16} className="text-indigo-600 dark:text-indigo-400" />
+                  <span>Key Performance Indicators (KPI)</span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Pencapaian terhadap target, dengan indikator warna: hijau (≥100%), kuning (80–99%), merah (&lt;80%).
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
+              {eis.kpi_cards.map((kpi) => {
+                const warna = eisWarnaKelas[kpi.status];
+                return (
+                  <div
+                    key={kpi.id_kpi}
+                    className="rounded-2xl p-4 border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 flex flex-col justify-between gap-3"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 leading-tight">
+                          {kpi.nama}
+                        </span>
+                        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${warna.dot}`} />
+                      </div>
+                      <p className="text-xl font-black text-slate-900 dark:text-slate-100 mt-1.5">
+                        {formatNilaiKpi(kpi.nilai, kpi.satuan)}
+                      </p>
+                    </div>
+                    <div>
+                      <div className="h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${warna.bar}`}
+                          style={{ width: `${Math.min(100, Math.max(0, kpi.pencapaian_persen))}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between mt-1.5 text-[10px]">
+                        <span className={`font-bold ${warna.teks}`}>{kpi.pencapaian_persen}% target</span>
+                        <span className="text-slate-400">
+                          Target: {kpi.target > 0 ? formatNilaiKpi(kpi.target, kpi.satuan) : "—"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* TREN + BALANCED SCORECARD */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Tren penjualan harian */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">Tren Penjualan 7 Hari</h4>
+                <span
+                  className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                    eis.tren.arah === "naik"
+                      ? eisWarnaKelas.hijau.chip
+                      : eis.tren.arah === "turun"
+                      ? eisWarnaKelas.merah.chip
+                      : eisWarnaKelas.kuning.chip
+                  }`}
+                >
+                  {eis.tren.arah} {eis.tren.perubahan_persen > 0 ? "+" : ""}
+                  {eis.tren.perubahan_persen}%
+                </span>
+              </div>
+
+              {/* Sparkline sederhana dari data nyata */}
+              <div className="flex items-end gap-1.5 h-28">
+                {tps.tren_penjualan_harian.map((d) => {
+                  const maxOmset = Math.max(...tps.tren_penjualan_harian.map((x) => x.omset), 1);
+                  const tinggi = Math.max(4, Math.round((d.omset / maxOmset) * 100));
+                  return (
+                    <div key={d.tanggal} className="flex-1 flex flex-col items-center justify-end gap-1 h-full">
+                      <div
+                        className="w-full rounded-t-md bg-gradient-to-t from-indigo-500 to-indigo-400 dark:from-indigo-600 dark:to-indigo-400"
+                        style={{ height: `${tinggi}%` }}
+                        title={`${d.hari} ${d.tanggal}: ${rupiah(d.omset)} (${d.transaksi} transaksi)`}
+                      />
+                      <span className="text-[9px] font-semibold text-slate-400">{d.hari}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <ul className="text-xs space-y-2 text-slate-600 dark:text-slate-300 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <li className="flex justify-between">
+                  <span>Rata-rata omset harian:</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100">{rupiah(eis.tren.rata_rata_harian)}</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Hari terbaik:</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100">
+                    {eis.tren.hari_terbaik ? rupiah(eis.tren.hari_terbaik.omset) : "—"}
+                  </span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Hari tanpa penjualan:</span>
+                  <span
+                    className={`font-bold ${eis.tren.hari_tanpa_penjualan > 0 ? "text-rose-600 dark:text-rose-400" : "text-slate-900 dark:text-slate-100"}`}
+                  >
+                    {eis.tren.hari_tanpa_penjualan} hari
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Balanced Scorecard */}
+            <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <AwardIcon size={16} className="text-indigo-600 dark:text-indigo-400" />
+                    <span>Balanced Scorecard Eksekutif</span>
+                  </h4>
+                  <p className="text-[11px] text-slate-400">Empat perspektif kinerja perusahaan (skala 0–100).</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-black text-slate-900 dark:text-slate-100">
+                    {eis.balanced_scorecard.skor_total}
+                  </span>
+                  <p className="text-[10px] font-bold uppercase text-slate-400">{eis.balanced_scorecard.predikat}</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {eis.balanced_scorecard.dimensi.map((d) => {
+                  const warna = eisWarnaKelas[d.status];
+                  return (
+                    <div key={d.nama} className="rounded-2xl p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{d.nama}</span>
+                        <span className="text-[10px] text-slate-400 font-semibold">
+                          Bobot {d.bobot_persen}% • <span className={`font-black ${warna.teks}`}>{d.skor}</span>
+                        </span>
+                      </div>
+                      <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${warna.bar}`} style={{ width: `${d.skor}%` }} />
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5">{d.keterangan}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* PERINGATAN DINI + PROYEKSI */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Early Warning System */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+              <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <AlertWarningIcon size={16} className="text-amber-500" />
+                <span>Peringatan Dini (Early Warning System)</span>
+              </h4>
+              {eis.peringatan_dini.length === 0 ? (
+                <div className="rounded-2xl p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 text-xs font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                  <CheckCircleIcon size={16} />
+                  Tidak ada anomali terdeteksi. Semua indikator dalam batas normal.
+                </div>
+              ) : (
+                <ul className="space-y-2.5">
+                  {eis.peringatan_dini.map((p) => {
+                    const warna =
+                      p.tingkat === "kritis"
+                        ? eisWarnaKelas.merah
+                        : p.tingkat === "waspada"
+                        ? eisWarnaKelas.kuning
+                        : eisWarnaKelas.hijau;
+                    return (
+                      <li
+                        key={p.id}
+                        className="rounded-2xl p-3 border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            {p.kategori}
+                          </span>
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${warna.chip}`}>
+                            {p.tingkat}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{p.pesan}</p>
+                        <p className="text-[10px] text-slate-400 mt-1">Ambang: {p.ambang}</p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+
+            {/* Proyeksi omset */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <TrendingUpIcon size={16} className="text-indigo-600 dark:text-indigo-400" />
+                  <span>Proyeksi Omset Akhir Periode</span>
+                </h4>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900">
+                  Keyakinan {eis.proyeksi_omset.confidence_persen}%
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-2xl p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] font-bold uppercase text-slate-400">Run-rate Harian</span>
+                  <p className="font-black text-slate-900 dark:text-slate-100 mt-1">
+                    {rupiah(eis.proyeksi_omset.run_rate_harian)}
+                  </p>
+                </div>
+                <div className="rounded-2xl p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] font-bold uppercase text-slate-400">Estimasi Akhir Periode</span>
+                  <p className="font-black text-slate-900 dark:text-slate-100 mt-1">
+                    {rupiah(eis.proyeksi_omset.proyeksi_omset_periode_selesai)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2.5">
+                {eis.proyeksi_omset.proyeksi.map((p) => (
+                  <div key={p.label} className="rounded-2xl p-3 border border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-slate-700 dark:text-slate-300">{p.skenario}</span>
+                      <span className="text-[11px] text-slate-500">
+                        {rupiah(p.batas_bawah)} – {rupiah(p.batas_atas)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-[10px] text-slate-400 leading-relaxed">
+                Proyeksi dihitung dari run-rate omset {eis.proyeksi_omset.hari_berjalan} hari terhadap total{" "}
+                {eis.proyeksi_omset.total_hari_periode} hari periode. Gunakan sebagai indikasi, bukan kepastian.
+              </p>
+            </div>
+          </div>
+
+          {/* DRILL-DOWN LINTAS SISTEM */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <FilterIcon size={16} className="text-slate-500" />
+                <span>Drill-Down Lintas Sistem</span>
+              </h4>
+              <span className="text-[10px] text-slate-400">Sumber: TPS • OAS • KMS</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              {eis.drill_down.map((d) => (
+                <div
+                  key={`${d.sumber}-${d.dimensi}`}
+                  className="rounded-2xl px-3.5 py-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2"
+                >
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                      {d.sumber}
+                    </span>
+                    <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{d.dimensi}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-black text-slate-900 dark:text-slate-100">
+                      {formatNilaiKpi(d.nilai, d.satuan)}
+                    </p>
+                    <p className="text-[10px] text-slate-400">arah: {d.arah}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1294,6 +1657,28 @@ export default function MisManager() {
                   <div>• Rasio Penyelesaian Training Staf: <b>{kms.pelatihan_completion_rate}% peserta tuntas</b></div>
                   <div>• Rata-rata Skor Kompetensi SDM: <b>{kms.rata_rata_kompetensi} / 100</b></div>
                 </div>
+              </div>
+
+              {/* EIS Summary Section */}
+              <div>
+                <h4 className="font-bold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 pb-1 mb-2">
+                  4. Ringkasan EIS (Executive Information System)
+                </h4>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-slate-700 dark:text-slate-300">
+                  <div>• Skor Balanced Scorecard: <b>{eis.balanced_scorecard.skor_total} / 100 ({eis.balanced_scorecard.predikat})</b></div>
+                  <div>• Tren Penjualan: <b>{eis.tren.arah} ({eis.tren.perubahan_persen}%)</b></div>
+                  <div>• Proyeksi Omset Akhir Periode: <b>{rupiah(eis.proyeksi_omset.proyeksi_omset_periode_selesai)}</b></div>
+                  <div>• Peringatan Dini Aktif: <b>{eis.peringatan_dini.length} indikator</b></div>
+                </div>
+                {eis.peringatan_dini.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-[11px] text-slate-600 dark:text-slate-400">
+                    {eis.peringatan_dini.map((p) => (
+                      <li key={p.id}>
+                        - [{p.tingkat.toUpperCase()}] {p.kategori}: {p.pesan}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               {/* Signoff footer */}

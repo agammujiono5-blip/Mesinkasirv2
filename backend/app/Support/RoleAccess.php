@@ -12,11 +12,9 @@ use App\Models\User;
  * tampil selalu sama dengan yang diizinkan server.
  *
  * Hak akses modul:
- * - MIS (laporan & analitik eksekutif): admin, owner, manager — baca saja.
- * - DSS (analisis keputusan SAW): admin, owner, manager — manager hanya boleh
- *   menjalankan analisis, hanya admin/owner yang boleh mengubah bobot kriteria.
- * - ES (sistem pakar): admin, owner, manager, kasir — kasir hanya boleh
- *   mendiagnosa, perubahan/penyimpanan hanya admin, owner, manager.
+ * - MIS (laporan & analitik eksekutif): manager saja.
+ * - DSS (analisis keputusan SAW): manager saja.
+ * - ES (sistem pakar): manager saja.
  * - Karyawan (kepegawaian): admin, manager — manager hanya boleh mengelola
  *   data kepegawaian, hanya admin yang boleh membuat akun login dan mengubah
  *   jabatan/divisi serta menonaktifkan karyawan.
@@ -32,23 +30,23 @@ class RoleAccess
     /** Seluruh role yang dikenal aplikasi. */
     public const ROLES = ['admin', 'owner', 'manager', 'kasir', 'pelanggan'];
 
-    /** Role yang boleh membuka modul MIS (laporan eksekutif). */
-    public const MIS = ['admin', 'owner', 'manager'];
+    /** Role yang boleh membuka modul MIS (laporan eksekutif). Khusus manager. */
+    public const MIS = ['manager'];
 
-    /** Role yang boleh membuka modul DSS. */
-    public const DSS = ['admin', 'owner', 'manager'];
+    /** Role yang boleh membuka modul DSS. Khusus manager. */
+    public const DSS = ['manager'];
 
-    /** Role yang boleh menjalankan analisis DSS dan menyimpan riwayat. */
-    public const DSS_ANALYZE = ['admin', 'owner', 'manager'];
+    /** Role yang boleh menjalankan analisis DSS dan menyimpan riwayat. Khusus manager. */
+    public const DSS_ANALYZE = ['manager'];
 
-    /** Role yang boleh mengubah bobot/kriteria DSS. */
-    public const DSS_CRITERIA = ['admin', 'owner'];
+    /** Role yang boleh mengubah bobot/kriteria DSS. Khusus manager. */
+    public const DSS_CRITERIA = ['manager'];
 
-    /** Role yang boleh membuka modul ES. */
-    public const ES = ['admin', 'owner', 'manager', 'kasir'];
+    /** Role yang boleh membuka modul ES. Khusus manager. */
+    public const ES = ['manager'];
 
-    /** Role yang boleh menyimpan hasil diagnosa ES. */
-    public const ES_DIAGNOSE = ['admin', 'owner', 'manager'];
+    /** Role yang boleh menyimpan hasil diagnosa ES. Khusus manager. */
+    public const ES_DIAGNOSE = ['manager'];
 
     /** Role yang boleh melihat data operasional lengkap (dashboard, transaksi, stok). */
     public const OPERASIONAL = ['admin', 'owner', 'manager', 'kasir'];

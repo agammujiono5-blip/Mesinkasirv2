@@ -566,14 +566,14 @@ export interface TPSPerformanceData {
   stok_kritis_count: number;
   nilai_aset_inventori: number;
   turnover_ratio: number;
-  penjualan_periode?: number;
-  transaksi_periode?: number;
-  pembelian_periode?: number;
-  laba_kotor_periode?: number;
-  total_omset_all_time?: number;
-  total_transaksi_all_time?: number;
-  total_pembelian_all_time?: number;
-  stok_kritis_items?: Array<{
+  penjualan_periode: number;
+  transaksi_periode: number;
+  pembelian_periode: number;
+  laba_kotor_periode: number;
+  total_omset_all_time: number;
+  total_transaksi_all_time: number;
+  total_pembelian_all_time: number;
+  stok_kritis_items: Array<{
     id_barang: number;
     kode_barang: string;
     nama_barang: string;
@@ -734,7 +734,135 @@ export interface MISExecutiveData {
   oas: OASWorkflowData;
   kms: KMSKnowledgeData;
   insights: ExecutiveDecisionInsight[];
+  eis: EISExecutiveIntelligence;
 }
+
+// ---------------------------------------------------------------------------
+// EIS (Executive Information System) — lapisan ringkas untuk eksekutif/manager
+// ---------------------------------------------------------------------------
+
+export type EISStatusWarna = 'hijau' | 'kuning' | 'merah';
+
+export interface EISKpi {
+  id_kpi: string;
+  nama: string;
+  nilai: number;
+  satuan: 'rupiah' | 'persen' | 'unit' | 'sku' | 'rasio';
+  target: number;
+  arah_baik: 'naik' | 'turun';
+  pencapaian_persen: number;
+  status: EISStatusWarna;
+}
+
+export interface EISTren {
+  arah: 'naik' | 'turun' | 'stabil';
+  perubahan_persen: number;
+  hari_terbaik: { tanggal: string; omset: number } | null;
+  rata_rata_harian: number;
+  hari_tanpa_penjualan: number;
+}
+
+export interface EISBalancedScorecard {
+  dimensi: Array<{
+    nama: 'Finansial' | 'Pelanggan' | 'Proses Internal' | 'Pembelajaran & Pertumbuhan';
+    skor: number;
+    bobot_persen: number;
+    status: EISStatusWarna;
+    keterangan: string;
+  }>;
+  skor_total: number;
+  predikat: 'Sangat Sehat' | 'Sehat' | 'Perlu Perhatian' | 'Kritis';
+}
+
+export interface EISPeringatanDini {
+  id: string;
+  kategori: 'Stok' | 'Finansial' | 'Administrasi' | 'SDM' | 'Trend';
+  tingkat: 'kritis' | 'waspada' | 'monitor';
+  pesan: string;
+  ambang: string;
+}
+
+export interface EISProyeksi {
+  label: string;
+  batas_bawah: number;
+  batas_atas: number;
+  skenario: 'Pesimis' | 'Realistis' | 'Optimis';
+}
+
+export interface EISProyeksiOmset {
+  proyeksi: EISProyeksi[];
+  hari_berjalan: number;
+  total_hari_periode: number;
+  run_rate_harian: number;
+  proyeksi_omset_periode_selesai: number;
+  confidence_persen: number;
+}
+
+export interface EISExecutiveIntelligence {
+  kpi_cards: EISKpi[];
+  tren: EISTren;
+  balanced_scorecard: EISBalancedScorecard;
+  peringatan_dini: EISPeringatanDini[];
+  proyeksi_omset: EISProyeksiOmset;
+  drill_down: Array<{ sumber: string; dimensi: string; nilai: number; satuan: EISKpi['satuan']; arah: string }>;
+  ringkasan_periode?: { periode: string; dihitung_pada: string };
+}
+
+/** Blok EIS dihitung server-side oleh App\Services\EisService. */
+const petaEis = (eis: any): EISExecutiveIntelligence => ({
+  kpi_cards: Array.isArray(eis?.kpi_cards) ? eis.kpi_cards : [],
+  tren: {
+    arah: eis?.tren?.arah ?? 'stabil',
+    perubahan_persen: Number(eis?.tren?.perubahan_persen) || 0,
+    hari_terbaik: eis?.tren?.hari_terbaik ?? null,
+    rata_rata_harian: Number(eis?.tren?.rata_rata_harian) || 0,
+    hari_tanpa_penjualan: Number(eis?.tren?.hari_tanpa_penjualan) || 0,
+  },
+  balanced_scorecard: {
+    dimensi: Array.isArray(eis?.balanced_scorecard?.dimensi) ? eis.balanced_scorecard.dimensi : [],
+    skor_total: Number(eis?.balanced_scorecard?.skor_total) || 0,
+    predikat: eis?.balanced_scorecard?.predikat ?? 'Perlu Perhatian',
+  },
+  peringatan_dini: Array.isArray(eis?.peringatan_dini) ? eis.peringatan_dini : [],
+  proyeksi_omset: {
+    proyeksi: Array.isArray(eis?.proyeksi_omset?.proyeksi) ? eis.proyeksi_omset.proyeksi : [],
+    hari_berjalan: Number(eis?.proyeksi_omset?.hari_berjalan) || 0,
+    total_hari_periode: Number(eis?.proyeksi_omset?.total_hari_periode) || 0,
+    run_rate_harian: Number(eis?.proyeksi_omset?.run_rate_harian) || 0,
+    proyeksi_omset_periode_selesai: Number(eis?.proyeksi_omset?.proyeksi_omset_periode_selesai) || 0,
+    confidence_persen: Number(eis?.proyeksi_omset?.confidence_persen) || 0,
+  },
+  drill_down: Array.isArray(eis?.drill_down) ? eis.drill_down : [],
+  ringkasan_periode: eis?.ringkasan_periode,
+});
+
+/** Normalisasi blok TPS dari `/dashboard/executive` menjadi `TPSPerformanceData`. */
+const petaTps = (exec: any): TPSPerformanceData => ({
+  penjualan_hari_ini: Number(exec?.penjualan_hari_ini) || 0,
+  transaksi_hari_ini: Number(exec?.transaksi_hari_ini) || 0,
+  penjualan_bulan_ini: Number(exec?.penjualan_bulan_ini) || 0,
+  pembelian_bulan_ini: Number(exec?.pembelian_bulan_ini) || 0,
+  laba_kotor_bulan_ini: Number(exec?.laba_kotor_bulan_ini) || 0,
+  margin_laba_persen: Number(exec?.margin_laba_persen) || 0,
+  rata_rata_transaksi: Number(exec?.rata_rata_transaksi) || 0,
+  kecepatan_kasir_detik: 40,
+  total_sku_aktif: Number(exec?.total_sku_aktif) || 0,
+  stok_kritis_count: Number(exec?.stok_kritis_count) || 0,
+  nilai_aset_inventori: Number(exec?.nilai_aset_inventori) || 0,
+  turnover_ratio: Number(exec?.turnover_ratio) || 4.8,
+  penjualan_periode: Number(exec?.penjualan_periode) || 0,
+  transaksi_periode: Number(exec?.transaksi_periode) || 0,
+  pembelian_periode: Number(exec?.pembelian_periode) || 0,
+  laba_kotor_periode: Number(exec?.laba_kotor_periode) || 0,
+  total_omset_all_time: Number(exec?.total_omset_all_time) || 0,
+  total_transaksi_all_time: Number(exec?.total_transaksi_all_time) || 0,
+  total_pembelian_all_time: Number(exec?.total_pembelian_all_time) || 0,
+  stok_kritis_items: Array.isArray(exec?.stok_kritis_items) ? exec.stok_kritis_items : [],
+  metode_pembayaran: Array.isArray(exec?.metode_pembayaran) ? exec.metode_pembayaran : [],
+  performa_kasir: Array.isArray(exec?.performa_kasir) ? exec.performa_kasir : [],
+  tren_penjualan_harian: [],
+  produk_pareto: Array.isArray(exec?.produk_pareto) ? exec.produk_pareto : [],
+});
 
 export const misApi = {
   // Aggregate real system data for Manager directly from database (TPS, OAS, KMS)
@@ -757,30 +885,8 @@ export const misApi = {
       : [];
 
     const tpsData: TPSPerformanceData = {
-      penjualan_hari_ini: Number(exec.penjualan_hari_ini) || 0,
-      transaksi_hari_ini: Number(exec.transaksi_hari_ini) || 0,
-      penjualan_bulan_ini: Number(exec.penjualan_bulan_ini) || 0,
-      pembelian_bulan_ini: Number(exec.pembelian_bulan_ini) || 0,
-      laba_kotor_bulan_ini: Number(exec.laba_kotor_bulan_ini) || 0,
-      margin_laba_persen: Number(exec.margin_laba_persen) || 0,
-      rata_rata_transaksi: Number(exec.rata_rata_transaksi) || 0,
-      kecepatan_kasir_detik: 40,
-      total_sku_aktif: Number(exec.total_sku_aktif) || 0,
-      stok_kritis_count: Number(exec.stok_kritis_count) || 0,
-      nilai_aset_inventori: Number(exec.nilai_aset_inventori) || 0,
-      turnover_ratio: Number(exec.turnover_ratio) || 4.8,
-      penjualan_periode: Number(exec.penjualan_periode) || 0,
-      transaksi_periode: Number(exec.transaksi_periode) || 0,
-      pembelian_periode: Number(exec.pembelian_periode) || 0,
-      laba_kotor_periode: Number(exec.laba_kotor_periode) || 0,
-      total_omset_all_time: Number(exec.total_omset_all_time) || 0,
-      total_transaksi_all_time: Number(exec.total_transaksi_all_time) || 0,
-      total_pembelian_all_time: Number(exec.total_pembelian_all_time) || 0,
-      stok_kritis_items: exec.stok_kritis_items || [],
-      metode_pembayaran: exec.metode_pembayaran || [],
-      performa_kasir: exec.performa_kasir || [],
+      ...petaTps(exec),
       tren_penjualan_harian: trenPenjualan,
-      produk_pareto: exec.produk_pareto || [],
     };
 
     // Real OAS Restock Requisitions directly from table rekomendasi_restock in database
@@ -977,6 +1083,7 @@ export const misApi = {
       oas: oasData,
       kms: kmsData,
       insights,
+      eis: petaEis(exec.eis),
     };
   },
 

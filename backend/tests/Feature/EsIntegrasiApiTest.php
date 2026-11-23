@@ -42,6 +42,23 @@ class EsIntegrasiApiTest extends TestCase
     }
 
     /**
+     * Modul MIS/DSS/ES hanya dapat diakses role manager.
+     */
+    protected function managerUser(): User
+    {
+        return User::firstOrCreate(
+            ['username' => 'manager'],
+            [
+                'nama' => 'Manager',
+                'email' => 'manager@pos.local',
+                'password' => 'password123',
+                'role' => 'manager',
+                'status' => 'aktif',
+            ]
+        );
+    }
+
+    /**
      * Data TPS/OAS minimal: satu SKU kritis yang laris, satu SKU menumpuk
      * tanpa penjualan, satu transaksi selesai, dan log tanpa referensi.
      *
@@ -112,7 +129,7 @@ class EsIntegrasiApiTest extends TestCase
 
     public function test_dashboard_es_menampilkan_status_sumber_data(): void
     {
-        Sanctum::actingAs($this->adminUser());
+        Sanctum::actingAs($this->managerUser());
 
         $response = $this->getJson('/api/es/dashboard');
 
@@ -137,7 +154,7 @@ class EsIntegrasiApiTest extends TestCase
     public function test_gejala_dinilai_otomatis_dari_data_operasional(): void
     {
         $data = $this->seedDataOperasional();
-        Sanctum::actingAs($this->adminUser());
+        Sanctum::actingAs($this->managerUser());
 
         $response = $this->getJson('/api/es/dashboard?periode=90_hari');
         $gejala = collect($response->json('data.deteksi_otomatis.gejala'))->keyBy('kode_gejala');
@@ -160,7 +177,7 @@ class EsIntegrasiApiTest extends TestCase
     public function test_diagnosa_otomatis_memakai_bukti_tanpa_input_manual(): void
     {
         $this->seedDataOperasional();
-        Sanctum::actingAs($this->adminUser());
+        Sanctum::actingAs($this->managerUser());
 
         $response = $this->postJson('/api/es/diagnose', [
             'gejala' => [],
@@ -187,7 +204,7 @@ class EsIntegrasiApiTest extends TestCase
     public function test_input_manual_menjadi_koreksi_bukti_otomatis(): void
     {
         $this->seedDataOperasional();
-        Sanctum::actingAs($this->adminUser());
+        Sanctum::actingAs($this->managerUser());
 
         $otomatis = $this->postJson('/api/es/simulate', ['gejala' => ['G05']])->json('data');
         $cfOtomatis = collect($otomatis['gejala_otomatis'])
@@ -211,7 +228,7 @@ class EsIntegrasiApiTest extends TestCase
     public function test_mode_manual_mengabaikan_bukti_otomatis(): void
     {
         $this->seedDataOperasional();
-        Sanctum::actingAs($this->adminUser());
+        Sanctum::actingAs($this->managerUser());
 
         $response = $this->postJson('/api/es/simulate', [
             'gejala' => ['G15', 'G16'],
@@ -229,7 +246,7 @@ class EsIntegrasiApiTest extends TestCase
     public function test_dss_memakai_diagnosa_es_terakhir_sebagai_konteks(): void
     {
         $data = $this->seedDataOperasional();
-        Sanctum::actingAs($this->adminUser());
+        Sanctum::actingAs($this->managerUser());
 
         $this->getJson('/api/dss/dashboard')
             ->assertOk()
@@ -257,7 +274,7 @@ class EsIntegrasiApiTest extends TestCase
     public function test_dss_tetap_jalan_tanpa_riwayat_es(): void
     {
         $this->seedDataOperasional();
-        Sanctum::actingAs($this->adminUser());
+        Sanctum::actingAs($this->managerUser());
 
         $response = $this->getJson('/api/dss/dashboard')->assertOk();
 

@@ -84,12 +84,12 @@ class AuthzApiTest extends TestCase
 
     public function test_token_akun_yang_dinonaktifkan_langsung_ditolak(): void
     {
-        $kasir = $this->userWithRole('kasir');
-        Sanctum::actingAs($kasir);
+        $manager = $this->userWithRole('manager');
+        Sanctum::actingAs($manager);
 
         $this->getJson('/api/es/dashboard')->assertOk();
 
-        $kasir->update(['status' => 'nonaktif']);
+        $manager->update(['status' => 'nonaktif']);
 
         $this->getJson('/api/es/dashboard')->assertStatus(403);
     }
@@ -100,7 +100,7 @@ class AuthzApiTest extends TestCase
 
         $response = $this->getJson('/api/auth/profile')->assertOk();
 
-        $this->assertTrue($response->json('data.akses.es'));
+        $this->assertFalse($response->json('data.akses.es'));
         $this->assertFalse($response->json('data.akses.es_diagnose'));
         $this->assertFalse($response->json('data.akses.mis'));
         $this->assertFalse($response->json('data.akses.dss'));
@@ -109,10 +109,10 @@ class AuthzApiTest extends TestCase
     public function test_hak_akses_modul_per_role_sesuai_matriks(): void
     {
         $ekspektasi = [
-            'admin' => ['mis' => true, 'dss' => true, 'dss_criteria' => true, 'es' => true, 'es_diagnose' => true],
-            'owner' => ['mis' => true, 'dss' => true, 'dss_criteria' => true, 'es' => true, 'es_diagnose' => true],
-            'manager' => ['mis' => true, 'dss' => true, 'dss_criteria' => false, 'es' => true, 'es_diagnose' => true],
-            'kasir' => ['mis' => false, 'dss' => false, 'dss_criteria' => false, 'es' => true, 'es_diagnose' => false],
+            'admin' => ['mis' => false, 'dss' => false, 'dss_criteria' => false, 'es' => false, 'es_diagnose' => false],
+            'owner' => ['mis' => false, 'dss' => false, 'dss_criteria' => false, 'es' => false, 'es_diagnose' => false],
+            'manager' => ['mis' => true, 'dss' => true, 'dss_criteria' => true, 'es' => true, 'es_diagnose' => true],
+            'kasir' => ['mis' => false, 'dss' => false, 'dss_criteria' => false, 'es' => false, 'es_diagnose' => false],
             'pelanggan' => ['mis' => false, 'dss' => false, 'dss_criteria' => false, 'es' => false, 'es_diagnose' => false],
         ];
 
@@ -127,23 +127,23 @@ class AuthzApiTest extends TestCase
         }
     }
 
-    public function test_modul_mis_hanya_untuk_admin_owner_manager(): void
+    public function test_modul_mis_dss_es_hanya_untuk_manager(): void
     {
         $this->getJson('/api/dashboard/executive')->assertStatus(401);
 
-        foreach (['admin', 'owner', 'manager'] as $role) {
-            $user = $this->userWithRole($role);
-            $this->actingAs($user);
+        $this->actingAs($this->userWithRole('manager'));
+        $this->getJson('/api/dashboard/executive')->assertOk();
+        $this->getJson('/api/dss/dashboard')->assertOk();
+        $this->getJson('/api/es/dashboard')->assertOk();
 
-            $this->getJson('/api/dashboard/executive')->assertOk();
+        foreach (['admin', 'owner', 'kasir', 'pelanggan'] as $role) {
+            $this->actingAs($this->userWithRole($role));
+
+            $this->getJson('/api/dashboard/executive')->assertStatus(403);
+            $this->putJson('/api/dashboard/rekomendasi/1', ['status' => 'Disetujui'])->assertStatus(403);
+            $this->getJson('/api/dss/dashboard')->assertStatus(403);
+            $this->getJson('/api/es/dashboard')->assertStatus(403);
         }
-
-        $this->actingAs($this->userWithRole('kasir'));
-        $this->getJson('/api/dashboard/executive')->assertStatus(403);
-        $this->putJson('/api/dashboard/rekomendasi/1', ['status' => 'Disetujui'])->assertStatus(403);
-
-        $this->actingAs($this->userWithRole('pelanggan'));
-        $this->getJson('/api/dashboard/executive')->assertStatus(403);
     }
 
     public function test_kasir_tetap_dapat_dashboard_operasional(): void
@@ -164,14 +164,34 @@ class AuthzApiTest extends TestCase
         $managerCodes = $manager->permissionCodes();
         $this->assertContains('view_mis', $managerCodes);
         $this->assertContains('analyze_dss', $managerCodes);
+        $this->assertContains('manage_dss_kriteria', $managerCodes);
         $this->assertNotContains('manage_users', $managerCodes);
-        $this->assertNotContains('manage_dss_kriteria', $managerCodes);
 
         $kasir = User::where('username', 'kasir1')->first();
         $this->assertEqualsCanonicalizing(
-            ['create_transaksi', 'view_transaksi', 'view_dashboard', 'view_es', 'diagnose_es'],
+            ['create_transaksi', 'view_transaksi', 'view_dashboard'],
             $kasir->permissionCodes()
         );
+    }
+
+    public function test_seeder_tidak_memberi_modul_mis_dss_es_ke_selain_manager(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $modulManagerSaja = ['view_mis', 'manage_rekomendasi', 'view_dss', 'analyze_dss', 'manage_dss_kriteria', 'view_es', 'diagnose_es'];
+        $idModul = Permission::whereIn('kode_permission', $modulManagerSaja)->pluck('id_permission');
+
+        $this->assertCount(count($modulManagerSaja), $idModul);
+
+        foreach (['admin', 'owner', 'kasir'] as $role) {
+            $this->assertSame(
+                0,
+                RolePermission::where('role', $role)->whereIn('id_permission', $idModul)->count(),
+                "Role {$role} seharusnya tidak memiliki permission MIS/DSS/ES."
+            );
+        }
+
+        $this->assertSame(count($modulManagerSaja), RolePermission::where('role', 'manager')->whereIn('id_permission', $idModul)->count());
     }
 
     public function test_seeder_memberi_admin_dan_owner_seluruh_permission(): void
@@ -179,12 +199,16 @@ class AuthzApiTest extends TestCase
         $this->seed(DatabaseSeeder::class);
 
         $total = Permission::count();
+        $dikecualikan = Permission::whereIn('kode_permission', [
+            'view_mis', 'manage_rekomendasi', 'view_dss', 'analyze_dss',
+            'manage_dss_kriteria', 'view_es', 'diagnose_es',
+        ])->count();
         $owner = $this->userWithRole('owner');
 
         $this->assertGreaterThan(0, $total);
-        $this->assertSame($total, RolePermission::where('role', 'admin')->count());
-        $this->assertSame($total, RolePermission::where('role', 'owner')->count());
-        $this->assertSame($total, count($owner->permissionCodes()));
+        $this->assertSame($total - $dikecualikan, RolePermission::where('role', 'admin')->count());
+        $this->assertSame($total - $dikecualikan, RolePermission::where('role', 'owner')->count());
+        $this->assertSame($total - $dikecualikan, count($owner->permissionCodes()));
     }
 
     public function test_sync_permission_hanya_untuk_admin_dan_owner(): void

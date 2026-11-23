@@ -47,8 +47,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/stats', [DashboardController::class, 'stats']);
         Route::get('/chart', [DashboardController::class, 'chart']);
 
-        // MIS - laporan & analitik eksekutif (admin, owner, manager)
-        Route::middleware('role:admin,owner,manager')->group(function () {
+        // MIS - laporan & analitik eksekutif (khusus manager)
+        Route::middleware('role:manager')->group(function () {
             Route::get('/executive', [DashboardController::class, 'executive']);
             Route::put('/rekomendasi/{id}', [DashboardController::class, 'updateRestock'])->whereNumber('id');
         });
@@ -56,7 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // DSS - Decision Support System (lanjutan MIS: TPS + OAS + KMS -> MIS -> DSS)
     Route::prefix('dss')
-        ->middleware('role:admin,owner,manager')
+        ->middleware('role:manager')
         ->group(function () {
             Route::get('/dashboard', [DssController::class, 'dashboard']);
             Route::get('/data-sources', [DssController::class, 'dataSources']);
@@ -65,21 +65,13 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/history', [DssController::class, 'history']);
             Route::get('/history/{id}', [DssController::class, 'historyDetail'])->whereNumber('id');
             Route::post('/simulate', [DssController::class, 'simulate']);
-
-            // Aksi yang menyimpan riwayat keputusan
-            Route::middleware('role:admin,owner,manager')->group(function () {
-                Route::post('/analyze', [DssController::class, 'analyze']);
-            });
-
-            // Bobot kriteria hanya boleh diubah admin/owner
-            Route::middleware('role:admin,owner')->group(function () {
-                Route::put('/criteria', [DssController::class, 'updateCriteria']);
-            });
+            Route::post('/analyze', [DssController::class, 'analyze']);
+            Route::put('/criteria', [DssController::class, 'updateCriteria']);
         });
 
     // ES - Expert System (lanjutan DSS: TPS + OAS + KMS -> MIS -> DSS -> ES)
     Route::prefix('es')
-        ->middleware('role:admin,owner,manager,kasir')
+        ->middleware('role:manager')
         ->group(function () {
             Route::get('/dashboard', [EsController::class, 'dashboard']);
             Route::get('/gejala', [EsController::class, 'gejala']);
@@ -88,11 +80,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/history', [EsController::class, 'history']);
             Route::get('/history/{id}', [EsController::class, 'historyDetail'])->whereNumber('id');
             Route::post('/simulate', [EsController::class, 'simulate']);
-
-            // Aksi yang menyimpan riwayat diagnosa
-            Route::middleware('role:admin,owner,manager')->group(function () {
-                Route::post('/diagnose', [EsController::class, 'diagnose']);
-            });
+            Route::post('/diagnose', [EsController::class, 'diagnose']);
         });
 
     // Data kepegawaian milik user sendiri (semua role ber-login)

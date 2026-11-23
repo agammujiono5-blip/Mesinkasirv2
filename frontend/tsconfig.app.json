@@ -16,6 +16,15 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /*
+     * Alias "@/" -> "src/", disamakan dengan resolve.alias di vite.config.ts.
+     * Tanpa "baseUrl": sejak TS 4.1 path di "paths" sudah relatif terhadap
+     * file tsconfig ini, sementara "baseUrl" sendiri deprecated di TS 7.
+     */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,

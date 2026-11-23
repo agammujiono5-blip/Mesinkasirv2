@@ -36,6 +36,18 @@ class DssApiTest extends TestCase
         ]);
     }
 
+    protected function ownerUser(): User
+    {
+        return User::create([
+            'nama' => 'Owner',
+            'username' => 'owner',
+            'email' => 'owner@pos.local',
+            'password' => 'password123',
+            'role' => 'owner',
+            'status' => 'aktif',
+        ]);
+    }
+
     protected function managerUser(): User
     {
         return User::create([
@@ -328,19 +340,33 @@ class DssApiTest extends TestCase
         $this->postJson('/api/dss/simulate', [])->assertStatus(403);
     }
 
-    public function test_manager_boleh_analisis_tetapi_tidak_ubah_bobot(): void
+    public function test_manager_boleh_analisis_dan_ubah_bobot(): void
     {
         $this->seedTpsData();
         Sanctum::actingAs($this->managerUser());
 
         $this->putJson('/api/dss/criteria', [
             'bobot' => ['C1' => 35, 'C2' => 25, 'C3' => 20, 'C4' => 20],
-        ])->assertStatus(403);
+        ])->assertOk();
+    }
+
+    public function test_admin_dan_owner_tidak_dapat_membuka_modul_dss(): void
+    {
+        $this->seedTpsData();
+
+        foreach ([$this->adminUser(), $this->ownerUser()] as $user) {
+            Sanctum::actingAs($user);
+
+            $this->getJson('/api/dss/dashboard')->assertStatus(403);
+            $this->putJson('/api/dss/criteria', [
+                'bobot' => ['C1' => 40, 'C2' => 20, 'C3' => 20, 'C4' => 20],
+            ])->assertStatus(403);
+        }
     }
 
     public function test_update_bobot_kriteria_tersimpan(): void
     {
-        Sanctum::actingAs($this->adminUser());
+        Sanctum::actingAs($this->managerUser());
 
         $this->putJson('/api/dss/criteria', [
             'bobot' => ['C1' => 40, 'C2' => 20, 'C3' => 20, 'C4' => 20],
@@ -353,7 +379,7 @@ class DssApiTest extends TestCase
 
     public function test_update_bobot_tidak_valid_ditolak(): void
     {
-        Sanctum::actingAs($this->adminUser());
+        Sanctum::actingAs($this->managerUser());
 
         $this->putJson('/api/dss/criteria', [
             'bobot' => ['C1' => 10, 'C2' => 10, 'C3' => 10, 'C4' => 10],

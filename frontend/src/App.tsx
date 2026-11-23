@@ -28,6 +28,9 @@ const HALAMAN_TERLARANG: Partial<Record<AdminPage, keyof ModuleAccess>> = {
   users: "manage_users",
 };
 
+/** Modul yang hanya boleh dibuka role manager (MIS, DSS, ES). */
+const MODUL_MANAGER: AdminPage[] = ["mis-manager", "dss", "expert-system"];
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState<UserSession | null>(null);
   const [akses, setAkses] = useState<ModuleAccess>(AKSES_MINIMAL);
@@ -109,7 +112,7 @@ export default function App() {
       return;
     }
     setView("admin");
-    setAdminPage(hak.mis ? "mis-manager" : "dashboard");
+    setAdminPage(hak.mis && user.role === "manager" ? "mis-manager" : "dashboard");
   };
 
   const handleLoginSuccess = (
@@ -137,6 +140,9 @@ export default function App() {
   const renderAdminContent = () => {
     const syarat = HALAMAN_TERLARANG[adminPage];
     if (syarat && !akses[syarat]) {
+      return <AksesDitolak />;
+    }
+    if (MODUL_MANAGER.includes(adminPage) && currentUser?.role !== "manager") {
       return <AksesDitolak />;
     }
 

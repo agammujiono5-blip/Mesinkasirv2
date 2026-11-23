@@ -14,6 +14,21 @@ use Illuminate\Support\Facades\Hash;
 class DatabaseSeeder extends Seeder
 {
     /**
+     * Permission modul yang hanya boleh dimiliki role manager.
+     *
+     * @var list<string>
+     */
+    private const PERMISSION_MANAGER_SAJA = [
+        'view_mis',
+        'manage_rekomendasi',
+        'view_dss',
+        'analyze_dss',
+        'manage_dss_kriteria',
+        'view_es',
+        'diagnose_es',
+    ];
+
+    /**
      * Seed the application's database.
      */
     public function run(): void
@@ -88,15 +103,20 @@ class DatabaseSeeder extends Seeder
         ];
 
         // Matriks permission per role. 'admin' selalu mendapat seluruh permission.
+        // Modul MIS, DSS, dan ES sengaja tidak diberikan ke admin/owner/kasir:
+        // ketiganya hanya bisa diakses role manager.
         $permissionPerRole = [
-            'owner' => array_column($permissionsList, 'kode_permission'),
+            'owner' => array_values(array_diff(
+                array_column($permissionsList, 'kode_permission'),
+                ['view_mis', 'manage_rekomendasi', 'view_dss', 'analyze_dss', 'manage_dss_kriteria', 'view_es', 'diagnose_es']
+            )),
             'manager' => [
                 'manage_barang', 'manage_kategori', 'manage_supplier', 'manage_diskon',
                 'view_transaksi', 'manage_pembelian', 'manage_stok', 'view_dashboard',
-                'view_mis', 'manage_rekomendasi', 'view_dss', 'analyze_dss',
+                'view_mis', 'manage_rekomendasi', 'view_dss', 'analyze_dss', 'manage_dss_kriteria',
                 'view_es', 'diagnose_es', 'manage_karyawan',
             ],
-            'kasir' => ['create_transaksi', 'view_transaksi', 'view_dashboard', 'view_es', 'diagnose_es'],
+            'kasir' => ['create_transaksi', 'view_transaksi', 'view_dashboard'],
         ];
 
         foreach ($permissionsList as $pData) {
@@ -104,6 +124,11 @@ class DatabaseSeeder extends Seeder
                 ['kode_permission' => $pData['kode_permission']],
                 ['deskripsi' => $pData['deskripsi']]
             );
+
+            // Admin tidak menerima permission modul MIS/DSS/ES.
+            if (in_array($pData['kode_permission'], self::PERMISSION_MANAGER_SAJA, true)) {
+                continue;
+            }
 
             RolePermission::firstOrCreate([
                 'role' => 'admin',
@@ -121,6 +146,13 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+
+        // Modul MIS/DSS/ES hanya untuk manager: cabut sisa permission role lain
+        // pada database yang sudah pernah diseed sebelumnya.
+        $idManagerSaja = Permission::whereIn('kode_permission', self::PERMISSION_MANAGER_SAJA)->pluck('id_permission');
+        RolePermission::whereIn('id_permission', $idManagerSaja)
+            ->where('role', '!=', 'manager')
+            ->delete();
 
         // 3. Kategori
         $katMakanan = Kategori::firstOrCreate(['nama_kategori' => 'Makanan & Minuman']);

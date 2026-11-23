@@ -69,6 +69,8 @@ const SYARAT_MENU: Partial<Record<AdminPage, keyof ModuleAccess>> = {
 const NAV_GROUPS = [
   {
     section: "Sistem Informasi Manajemen (MIS)",
+    // Modul eksekutif ini hanya untuk role manager.
+    itemRole: "manager" as const,
     items: [
       { id: "mis-manager", label: "MIS Manager (TPS-OAS-KMS)", icon: BriefcaseIcon, badge: "Eksekutif" },
       { id: "dss", label: "DSS — Decision Support (SAW)", icon: BrainIcon, badge: "DSS" },
@@ -171,6 +173,9 @@ export default function AdminLayout({
     ...group,
     items: group.items.filter((item) => {
       const syarat = SYARAT_MENU[item.id as AdminPage];
+      if ("itemRole" in group && group.itemRole && user.role !== group.itemRole) {
+        return false;
+      }
       return !syarat || akses[syarat];
     }),
   })).filter((group) => group.items.length > 0);

@@ -201,11 +201,11 @@ class EsApiTest extends TestCase
         $this->getJson('/api/es/history/999')->assertStatus(404);
     }
 
-    public function test_kasir_tidak_boleh_menyimpan_diagnosa_tetapi_boleh_melihat(): void
+    public function test_kasir_tidak_boleh_membuka_modul_es(): void
     {
         Sanctum::actingAs($this->kasirUser());
 
-        $this->getJson('/api/es/dashboard')->assertOk();
+        $this->getJson('/api/es/dashboard')->assertStatus(403);
         $this->postJson('/api/es/diagnose', ['gejala' => ['G01']])->assertStatus(403);
     }
 
@@ -226,13 +226,12 @@ class EsApiTest extends TestCase
         $this->postJson('/api/es/diagnose', ['gejala' => ['G01']])->assertStatus(403);
     }
 
-    public function test_kasir_dapat_menggunakan_simulasi_diagnosa_tanpa_menyimpan(): void
+    public function test_modul_es_tertutup_untuk_kasir(): void
     {
         Sanctum::actingAs($this->kasirUser());
 
         $this->postJson('/api/es/simulate', ['gejala' => ['G01']])
-            ->assertOk()
-            ->assertJsonPath('data.disimpan', false);
+            ->assertStatus(403);
 
         $this->assertDatabaseCount('es_diagnosa', 0);
     }

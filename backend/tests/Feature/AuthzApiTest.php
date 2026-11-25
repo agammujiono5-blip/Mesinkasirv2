@@ -19,11 +19,13 @@ class AuthzApiTest extends TestCase
 
     protected function userWithRole(string $role): User
     {
+        // Email tidak boleh menabrak akun lain (mis. akun hasil seeder yang
+        // kini mencakup admin, manager, dan kasir1 dengan domain yang sama).
         return User::firstOrCreate(
             ['username' => "user-{$role}"],
             [
                 'nama' => ucfirst($role),
-                'email' => "{$role}@pos.local",
+                'email' => "user-{$role}@uji.local",
                 'password' => 'password123',
                 'role' => $role,
                 'status' => 'aktif',

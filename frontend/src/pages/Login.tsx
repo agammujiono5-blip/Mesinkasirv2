@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Moon, Sun } from "lucide-react";
-import NeuralAccessLogin from "@/components/ui/neural-access-login";
+import { SignIn2 } from "@/components/ui/clean-minimal-sign-in";
 import { authApi, authStorage } from "../services/api";
 import type { ModuleAccess, UserSession, UserRole } from "../services/api";
 import {
@@ -64,39 +64,37 @@ export default function Login({ onLogin, isDark, toggleDark }: LoginProps) {
       <button
         onClick={toggleDark}
         aria-label={isDark ? "Aktifkan mode terang" : "Aktifkan mode gelap"}
-        className="fixed right-5 top-5 z-30 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/60 backdrop-blur transition-colors hover:bg-white/10 hover:text-white"
+        className="fixed right-5 top-5 z-30 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
       >
         {isDark ? <Sun size={15} /> : <Moon size={15} />}
       </button>
 
-      <NeuralAccessLogin
-        identity={username}
-        onIdentityChange={setUsername}
+      <SignIn2
+        username={username}
+        onUsernameChange={(v) => {
+          setUsername(v);
+          setErrorMessage(null);
+        }}
         password={password}
-        onPasswordChange={setPassword}
+        onPasswordChange={(v) => {
+          setPassword(v);
+          setErrorMessage(null);
+        }}
         onSubmit={handleLogin}
         loading={loading}
         error={errorMessage}
-        identityLabel="Username"
-        identityPlaceholder="manager"
-        passwordLabel="Password"
-        passwordPlaceholder="••••••••"
+        title="Masuk ke KasirPro"
+        description="Kelola penjualan, stok, dan laporan toko Anda dalam satu tempat."
         submitLabel="Masuk"
+        className="dark:bg-slate-950"
         footer={
-          <>
-            <span>by Muhammad Agam Mudjiono © 2026</span>
-            <button
-              type="button"
-              onClick={() => setShowAkunDemo((v) => !v)}
-              className="uppercase tracking-[1px] transition-colors hover:text-white"
-            >
-              {showAkunDemo ? "Tutup akun demo" : "Akun demo"}
-            </button>
-          </>
+          <p className="text-[11px] text-slate-400">
+            by Muhammad Agam Mudjiono © 2026
+          </p>
         }
       >
         {/* Pemilih role — mengisi kredensial demo secara otomatis */}
-        <div className="grid grid-cols-3 gap-1 rounded-xl border border-white/10 bg-white/5 p-1">
+        <div className="grid grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
           {(Object.keys(PRESET_AKUN) as Role[]).map((r) => {
             const aktif = role === r;
             const IconComp = PRESET_AKUN[r].icon;
@@ -108,8 +106,8 @@ export default function Login({ onLogin, isDark, toggleDark }: LoginProps) {
                 aria-pressed={aktif}
                 className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-[11px] font-semibold uppercase tracking-wider transition-colors ${
                   aktif
-                    ? "bg-white text-black"
-                    : "text-white/50 hover:bg-white/5 hover:text-white"
+                    ? "bg-slate-800 text-white shadow-sm"
+                    : "text-slate-500 hover:bg-white hover:text-slate-800"
                 }`}
               >
                 <IconComp size={13} />
@@ -119,11 +117,21 @@ export default function Login({ onLogin, isDark, toggleDark }: LoginProps) {
           })}
         </div>
 
+        <div className="mt-3 text-center">
+          <button
+            type="button"
+            onClick={() => setShowAkunDemo((v) => !v)}
+            className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 transition-colors hover:text-slate-600"
+          >
+            {showAkunDemo ? "Tutup akun demo" : "Akun demo"}
+          </button>
+        </div>
+
         {showAkunDemo && (
-          <dl className="mt-3 space-y-1 font-mono text-[10px] text-white/40">
+          <dl className="mt-2 space-y-1 rounded-xl bg-slate-50 p-3 text-[11px] text-slate-500">
             {(Object.keys(PRESET_AKUN) as Role[]).map((r) => (
               <div key={r} className="flex justify-between gap-3">
-                <dt className="uppercase tracking-wider">{PRESET_AKUN[r].label}</dt>
+                <dt className="font-semibold uppercase tracking-wider">{PRESET_AKUN[r].label}</dt>
                 <dd>
                   {PRESET_AKUN[r].username} / password123
                 </dd>
@@ -131,7 +139,7 @@ export default function Login({ onLogin, isDark, toggleDark }: LoginProps) {
             ))}
           </dl>
         )}
-      </NeuralAccessLogin>
+      </SignIn2>
     </>
   );
 }

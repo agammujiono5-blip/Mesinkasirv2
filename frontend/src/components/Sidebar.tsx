@@ -59,13 +59,11 @@ export default function Sidebar({ current, onNavigate }: SidebarProps) {
       {/* Brand */}
       <div className="px-5 py-5 border-b" style={{ borderColor: "#1e293b" }}>
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#2563eb" }}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M2 4h12M2 8h8M2 12h10" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
+          <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-white" style={{ border: "1px solid #334155" }}>
+            <img src="/M.png" alt="Logo KasirPro" className="w-full h-full object-contain" />
           </div>
           <div>
-            <p className="text-white font-semibold text-sm leading-none">KasirPro</p>
+            <p className="text-white font-semibold text-sm leading-none">Kasir Pro</p>
             <p className="text-xs mt-0.5" style={{ color: "#64748b" }}>v2.0</p>
           </div>
         </div>

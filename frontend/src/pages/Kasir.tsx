@@ -14,7 +14,6 @@ import type {
   UserSession,
 } from "../services/api";
 import {
-  LogoIcon,
   SearchIcon,
   RefreshIcon,
   SunIcon,
@@ -247,8 +246,8 @@ export default function Kasir({ user, onLogout, isDark, toggleDark }: KasirProps
         className="flex items-center justify-between px-5 py-3 shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm"
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 shadow-sm">
-            <LogoIcon size={18} />
+          <div className="w-9 h-9 rounded-xl shrink-0 overflow-hidden bg-white border border-slate-200 dark:border-slate-700 shadow-sm">
+            <img src="/M.png" alt="Logo KasirPro" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="flex items-center gap-2">

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Barang;
+use App\Models\Karyawan;
 use App\Models\Kategori;
 use App\Models\Permission;
 use App\Models\RolePermission;
@@ -66,6 +67,21 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // Akun manager dibuat idempoten: di DB lama username ini bisa saja
+        // sudah ada (dibuat manual) tanpa baris di seeder.
+        $manager = User::firstOrCreate(
+            ['username' => 'manager'],
+            [
+                'nama' => 'Bpk. Hendra Pratama, MM',
+                'email' => 'manager@pos.local',
+                'password' => Hash::make('password123'),
+                'no_hp' => '081234567893',
+                'alamat' => 'Kantor Pusat',
+                'role' => 'manager',
+                'status' => 'aktif',
+            ]
+        );
+
         $pelanggan = User::firstOrCreate(
             ['username' => 'pelanggan1'],
             [
@@ -76,6 +92,29 @@ class DatabaseSeeder extends Seeder
                 'alamat' => 'Jl. Merdeka No. 10',
                 'role' => 'pelanggan',
                 'status' => 'aktif',
+            ]
+        );
+
+        // 1b. Data kepegawaian: hanya staf operasional (kasir).
+        //
+        // Admin, manager, dan pelanggan tidak didaftarkan sebagai karyawan.
+        // Modul OAS menghitung kehadiran shift dari tabel ini (jumlah karyawan
+        // aktif), jadi tanpa baris di sini angka kehadiran selalu 100%.
+        Karyawan::firstOrCreate(
+            ['id_user' => $kasir->id_user],
+            [
+                'nip' => 'KRY-0001',
+                'nama_lengkap' => $kasir->nama,
+                'jenis_kelamin' => 'L',
+                'tempat_lahir' => 'Sidoarjo',
+                'tanggal_lahir' => '1998-01-25',
+                'alamat' => $kasir->alamat,
+                'no_telepon' => $kasir->no_hp,
+                'email' => $kasir->email,
+                'jabatan' => 'Kasir',
+                'divisi' => 'Operasional',
+                'tanggal_masuk' => '2023-03-06',
+                'status_karyawan' => 'aktif',
             ]
         );
 

@@ -10,7 +10,6 @@ import type {
   UserSession,
 } from "../services/api";
 import {
-  LogoIcon,
   DashboardIcon,
   ReceiptIcon,
   PackageIcon,
@@ -250,10 +249,10 @@ export default function AdminLayout({
           <div className="relative w-72 max-w-[85vw] bg-white dark:bg-slate-900 h-full flex flex-col z-10 shadow-2xl border-r border-slate-200 dark:border-slate-800">
             <div className="px-4 py-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 shadow-sm">
-                  <LogoIcon size={16} />
+                <div className="w-8 h-8 rounded-xl shrink-0 overflow-hidden bg-white border border-slate-200 dark:border-slate-700 shadow-sm">
+                  <img src="/M.png" alt="Logo KasirPro" className="w-full h-full object-contain" />
                 </div>
-                <span className="font-bold text-sm text-slate-800 dark:text-slate-100">KasirPro</span>
+                <span className="font-bold text-sm text-slate-800 dark:text-slate-100">SMC</span>
               </div>
               <button
                 onClick={() => setMobileOpen(false)}
@@ -343,17 +342,17 @@ export default function AdminLayout({
         {/* Brand & Logo */}
         <div className="px-4 py-4 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800">
           <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 shadow-sm"
+            className="w-9 h-9 rounded-xl shrink-0 overflow-hidden bg-white border border-slate-200 dark:border-slate-700 shadow-sm"
           >
-            <LogoIcon size={18} />
+            <img src="/M.png" alt="Logo KasirPro" className="w-full h-full object-contain" />
           </div>
           {!collapsed && (
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <p className="text-sm font-bold truncate text-slate-800 dark:text-slate-100">KasirPro</p>
+                <p className="text-sm font-bold truncate text-slate-800 dark:text-slate-100">SMC</p>
                 <span className="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-500 animate-pulse" title="Real-time Active" />
               </div>
-              <p className="text-[10px] text-slate-400 truncate">Sistem POS Terintegrasi</p>
+              <p className="text-[10px] text-slate-400 truncate">Sistem ERP Terintegrasi</p>
             </div>
           )}
           <button
